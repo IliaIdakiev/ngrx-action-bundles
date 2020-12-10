@@ -11,6 +11,12 @@
     "sourceMap": true,
     "declaration": false,
     "downlevelIteration": true,
+    "paths": {
+      "ngrx-action-bundles": [
+        "dist/ngrx-action-bundles/ngrx-action-bundles",
+        "dist/ngrx-action-bundles"
+      ]
+    },
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,

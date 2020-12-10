@@ -1,5 +1,5 @@
 {
-  "name": "ngrx-action-bundles",
+  "name": "ngrx-action-bundles-app",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -37,6 +37,7 @@
     "karma-coverage": "~2.0.3",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
+    "ng-packagr": "^11.0.0",
     "protractor": "~7.0.0",
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
