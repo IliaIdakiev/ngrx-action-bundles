@@ -1,27 +1,230 @@
-# NgrxActionBundles
+# NGRX Action Bundles
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.1.0-next.1.
+**Easily Generate NGRX Actions and Easily Connect the Dispatchers and Listeners to your Angular Injectables/Components/Directives/Pipes**
 
-## Development server
+## USAGE:
+`npm install ngrx-action-bundles` || `yarn add ngrx-action-bundles`
+### Example:
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+actions.ts
+```typescript
+import { createAction, props } from '@ngrx/store';
+import { createAsyncActionBundleWithClear } from 'ngrx-action-bundles';
+import { IHttpRequestError, ILoadUsersSuccessPayload } from '../interfaces';
 
-## Code scaffolding
+const actionNamespace = '[MAIN]';
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+const loadUsersActionName = 'loadUsers';
 
-## Build
+/* *
+ *  <NGRX Action Bundles> Available functions:
+ * 
+ *  - createAction<NameType, NamespaceType, ActionPayloadType>(actionName, namespace)
+ *    
+ *    Creates <actionName> action      --> { type: <[namespace] action_name>, payload: ActionPayloadType };
+ * 
+ *  - createActionWithClear<NameType, NamespaceType, ActionPayloadType, ClearActionPayloadType>(actionName, namespace)
+ * 
+ *    Creates <actionName> action      --> { type: <[namespace] action_name>, payload: ActionPayloadType };
+ *    Creates <actionName>Clear action --> { type: <[namespace] action_nameClear>, payload: ClearActionPayloadType };
+ * 
+ *  - createAsyncActionBundle<
+ *      NameType, NamespaceType, 
+ *      ActionPayloadType, ActionSuccessPayloadType, 
+ *      ActionFailurePayloadType, ActionCancelPayloadType
+ *    >(actionName, namespace)
+ * 
+ *    Creates <actionName>             --> { type: <[namespace] action_name>, payload: ActionPayloadType }; 
+ *    Creates <actionName>Success      --> { type: <[namespace] action_nameSuccess>, payload: ActionSuccessPayloadType };
+ *    Creates <actionName>Failure      --> { type: <[namespace] action_nameFailure>, payload: ActionFailurePayloadType }
+ *    Creates <actionName>Cancel       --> { type: <[namespace] action_nameCancel>, payload: ActionCancelPayloadType }
+ * 
+ *  - createAsyncActionBundleWithClear<
+ *      NameType, NamespaceType, 
+ *      ActionPayloadType, ActionSuccessPayloadType, 
+ *      ActionFailurePayloadType, ActionCancelPayloadType, ClearActionPayloadType
+ *    >(actionName, namespace)
+ * 
+ *    Creates <actionName>             --> { type: <[namespace] action_name>, payload: ActionPayloadType }; 
+ *    Creates <actionName>Success      --> { type: <[namespace] action_nameSuccess>, payload: ActionSuccessPayloadType };
+ *    Creates <actionName>Failure      --> { type: <[namespace] action_nameFailure>, payload: ActionFailurePayloadType }
+ *    Creates <actionName>Cancel       --> { type: <[namespace] action_nameCancel>, payload: ActionCancelPayloadType }
+ *    Creates <actionName>Clear action --> { type: <[namespace] action_nameClear>, payload: ClearActionPayloadType };
+ * */
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+export const loadUsers = createAsyncActionBundleWithClear<
+  typeof loadUsersActionName, typeof actionNamespace,
+  void,
+  ILoadUsersSuccessPayload,
+  IHttpRequestError,
+  void,
+  void
+>(loadUsersActionName, actionNamespace);
 
-## Running unit tests
+/* Or you can just create an action using the createAction fn */
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+export const setItem = createAction(`${actionNamespace} setItem`, props<{ item: any }>); 
+// -> { type: <[namespace] setItem>, item: any };
+export const clearItem = createAction(`${actionNamespace} clearItem`);
+// -> { type: <[namespace] clearItem> };
+```
 
-## Running end-to-end tests
+reducers.ts
+```typescript
+import { createReducer, on } from '@ngrx/store';
+import { loadUsers, setItem, clearItem } from './actions';
+import { IUser } from '../interfaces';
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+export interface IUserListState {
+  userList: IUser[] | null;
+  item: any;
+}
 
-## Further help
+export const initialState: IUserListState = {
+  userList: null,
+  item: null
+};
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+/* *
+ * Here we just use the loadUsers action bundle that we've created in the actions.ts file
+ * in order to access the different actions so we can provide them to the NGRX `on` function.
+ * */
+
+export const userListReducer = createReducer<IUserListState>(
+  initialState,
+  on(loadUsers.loadUsers, (state) => {
+    return { ...state, userList: null };
+  }),
+  // since loadUsersSuccess is generated from the bundle we have a payload which contains our data
+  on(loadUsers.loadUsersSuccess, (state, { payload: { users } }) => {
+    return { ...state, userList: users };
+  }),
+  on(loadUsers.loadUsersFailure, (status, { payload: { error: { message } } }) => {
+    return { ...status, error: message };
+  }),
+  on(loadUsers.loadUsersClear, (status) => {
+    return { ...status, userList: null };
+  }),
+  on(setItem, (state, action) => {
+    // since setItem is generated by the default createAction with props<{ item: any }> we don't have payload
+    return { ...state, item: action.item };
+  }),
+  on(clearItem, (state, action) => {
+    return { ...state, item: null };
+  })
+);
+
+```
+
+effects.ts
+```typescript
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { map, switchMap, takeUntil } from 'rxjs/operators';
+import { IUser } from '../interfaces';
+import { loadUsers } from './actions';
+
+@Injectable()
+export class UserListEffects {
+
+  /* *
+   * Here we use the <NGRX Action Bundles> `connect` service in order to connect
+   * our action bundles to a property called actions on our component. For all the provided bundles
+   * the `connectActionBundles` will create the dispatchers and the listeners (rxjs streams) 
+   * so we can use them inside the component.
+   * 
+   * */
+
+  actions = this.connect.connectActionBundles([loadUsers]);
+
+  loadUsers = createEffect(() => this.actions.listen.loadUsers$.pipe(switchMap(
+    () => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(
+      takeUntil(this.actions$.pipe(ofType(loadUsers.loadUsersCancel))),
+      map(users => loadUsers.loadUsersSuccess({ users })),
+      catchError(error => [loadUsers.loadUsersFailure({ error })])
+    )
+  )));
+
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private connect: Connect
+  ) { }
+}
+```
+
+selectors.ts
+```typescript
+import { createSelector } from '@ngrx/store';
+
+export interface IRootState {
+  readonly user: IUserListState;
+}
+
+export const reducers: ActionReducerMap<IRootState> = {
+  user: userListReducer
+};
+
+export const selectUser = (state: IRootState) => state.user;
+
+export const selectUserList = createSelector(
+  selectUser,
+  (state: IUserListState) => state.userList
+);
+```
+
+some.component.ts
+```typescript
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Connect } from 'ngrx-action-bundles';
+import { loadUsers } from '../+store/actions';
+import { selectUserList } from '../+store/selectors';
+import { merge, Subscription } from 'rxjs';
+import { mapTo } from 'rxjs/operators';
+
+@Component({
+  ...
+})
+export class SomeComponent implements OnInit, OnDestroy {
+
+  /* *
+   * Here we use the <NGRX Action Bundles> `connect` service in order to connect
+   * our action bundles to a property called actions on our component. For all the provided bundles
+   * the `connectActionBundles` will create the dispatchers and the listeners (rxjs streams) 
+   * so we can use them inside the component.
+   * 
+   * We also use `connectSelectors` to connect all the selectors to the selectors property so we can
+   * directly access the streams from the store.
+   * */
+
+  actions = this.connect.connectActionBundles([loadUsers]);
+  selectors = this.connect.connectSelectors({ userList: selectUserList });
+
+  users$ = this.selectors.userList$;
+
+  isLoading = false;
+
+  constructor(private connect: Connect) {
+    this.subscriptions.add(
+      merge<any, boolean>(
+        this.actions.listen.loadUsers$.pipe(mapTo(true)),
+        this.actions.listen.loadUsersSuccess$.pipe(mapTo(false)),
+        this.actions.listen.loadUsersFailure$.pipe(mapTo(false)),
+      ).subscribe(isLoading => this.isLoading = isLoading)
+    );
+  }
+
+  ngOnInit(): void { this.loadUsers(); }
+
+
+  loadUsers(): void { this.actions.dispatch.loadUsers(); }
+
+  ngOnDestroy(): void {
+    if (this.isLoading) { this.actions.dispatch.loadUsersCancel(); }
+    this.actions.dispatch.loadUsersClear();
+    this.subscriptions.unsubscribe();
+  }
+}
+
+```

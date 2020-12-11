@@ -1,10 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Connect } from 'ngrx-action-bundles';
-import { loadUsers } from '../+store/actions';
+import { Connect, withDispatchAndListen } from 'ngrx-action-bundles';
+import { clearItem, loadUsers, setItem } from '../+store/actions';
 import { selectUserList } from '../+store/selectors';
 import { merge, Subscription } from 'rxjs';
 import { mapTo } from 'rxjs/operators';
-import { toBase64String } from '@angular/compiler/src/output/source_map';
 
 @Component({
   selector: 'app-home',

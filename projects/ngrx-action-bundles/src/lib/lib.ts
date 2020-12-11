@@ -5,6 +5,52 @@ import { MapKeyToCreator, WithDispatchAndListenResult } from './types';
 import { createUniqueAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
 
 // tslint:disable-next-line:typedef
+export function createAction<Name extends string, Namespace extends string, Action>(name: Name, namespace: Namespace) {
+  const actionKey = makeActionKeyWithSuffix(name, '');
+  type ActionKeyType = typeof actionKey;
+
+  const actionType = makeNamespacedActionKey(namespace, actionKey);
+  type ActionTypeType = typeof actionType;
+
+  return createUniqueAction<ActionTypeType, Action>(actionType);
+}
+
+// tslint:disable-next-line:typedef
+export function createActionWithClear<
+  Name extends string,
+  Namespace extends string,
+  Action,
+  ActionCancel
+>(name: Name, namespace: Namespace) {
+  const actionKey = makeActionKeyWithSuffix(name, '');
+  const actionCancelKey = makeActionKeyWithSuffix(name, 'Cancel');
+
+  type ActionKeyType = typeof actionKey;
+  type ActionCancelKeyType = typeof actionCancelKey;
+
+  const actionType = makeNamespacedActionKey(namespace, actionKey);
+  const actionTypeCancel = makeNamespacedActionKey(namespace, actionCancelKey);
+
+  type ActionTypeType = typeof actionType;
+  type ActionCancelTypeType = typeof actionTypeCancel;
+
+  const actionCreator = createUniqueAction<ActionTypeType, Action>(actionType);
+  const actionCancelCreator = createUniqueAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
+
+  type ActionMapType = MapKeyToCreator<{ t: typeof actionCreator }, ActionKeyType>;
+  type ActionCancelMapType = MapKeyToCreator<{ t: typeof actionCancelCreator }, ActionCancelKeyType>;
+
+  type ActionBundle = ActionMapType & ActionCancelMapType;
+
+  const result = {
+    [actionKey]: actionCreator,
+    [actionCancelKey]: actionCancelCreator
+  };
+
+  return result as ActionBundle;
+}
+
+// tslint:disable-next-line:typedef
 export function createAsyncActionBundle<
   Name extends string,
   Namespace extends string,

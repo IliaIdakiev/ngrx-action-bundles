@@ -15,7 +15,5 @@ export const loadUsers = createAsyncActionBundleWithClear<
   void
 >(loadUsersActionName, actionNamespace);
 
-
-// const a = createAction('aaa', props<{ name: string }>());
-
-// a()
+export const setItem = createAction(`${actionNamespace} setItem`, props<{ item: any }>());
+export const clearItem = createAction(`${actionNamespace} clearItem`);
