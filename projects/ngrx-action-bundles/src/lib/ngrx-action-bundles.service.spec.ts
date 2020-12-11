@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { NgrxActionBundlesService } from './ngrx-action-bundles.service';
+import { Connect } from './ngrx-action-bundles.service';
 
 describe('NgrxActionBundlesService', () => {
-  let service: NgrxActionBundlesService;
+  let service: Connect;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(NgrxActionBundlesService);
+    service = TestBed.inject(Connect);
   });
 
   it('should be created', () => {

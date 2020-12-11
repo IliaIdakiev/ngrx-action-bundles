@@ -1,0 +1,3 @@
+<div *ngIf="isLoading">Loading...</div>
+<div *ngFor="let user of (users$ | async)">{{user.username}}</div>
+<button (click)="loadUsers()">Reload Users</button>

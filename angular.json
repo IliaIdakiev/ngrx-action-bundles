@@ -70,6 +70,11 @@
           "options": {
             "browserTarget": "ngrx-action-bundles-app:build"
           },
+          "sourceMap": {
+            "vendor": true,
+            "scripts": true,
+            "styles": true
+          },
           "configurations": {
             "production": {
               "browserTarget": "ngrx-action-bundles-app:build:production"
