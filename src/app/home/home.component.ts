@@ -32,7 +32,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.actions.dispatch.loadUsers();
+    this.loadUsers();
 
     this.subscriptions.add(
       this.actions.listen.loadUsersSuccess$.subscribe(console.log)
@@ -47,7 +47,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 
   loadUsers(): void {
-    this.actions.dispatch.loadUsersClear();
     this.actions.dispatch.loadUsers();
   }
 
