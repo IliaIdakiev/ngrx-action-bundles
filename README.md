@@ -1,6 +1,6 @@
 # NGRX Action Bundles (Dependencies: @ngrx/store, @ngrx/effects)
 
-**Easily Generate NGRX Actions and Easily Connect the Dispatchers and Listeners to your Angular Injectables/Components/Directives/Pipes**
+**Easily Generate NGRX Action Bundles and Easily Connect the Dispatchers and Listeners to your Angular Injectables/Components/Directives/Pipes**
 
 **YOU CAN USE THIS WITH TYPESCRIPT 4.1 BUT IT'S STILL UNDER DEVELOPMENT**
 
