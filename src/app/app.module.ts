@@ -11,6 +11,7 @@ import { HomeComponent } from './home/home.component';
 import { EffectsModule } from '@ngrx/effects';
 import { UserListEffects } from './+store/effects';
 import { AboutComponent } from './about/about.component';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import { AboutComponent } from './about/about.component';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
+    StoreDevtoolsModule.instrument(),
     EffectsModule.forRoot([UserListEffects]),
     StoreModule.forRoot(reducers),
     NgrxActionBundlesModule
