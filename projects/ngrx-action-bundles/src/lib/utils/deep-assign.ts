@@ -20,5 +20,5 @@ export function deepAssign<R extends any[]>(...sources: R): UnionToIntersection<
       }
     }
   }
-  return target as UnionToIntersection<ElementOf<R>>;
+  return target;
 }

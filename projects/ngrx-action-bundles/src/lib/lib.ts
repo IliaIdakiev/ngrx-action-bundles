@@ -1,22 +1,30 @@
-import { ofType } from '@ngrx/effects';
-import { TypedAction } from '@ngrx/store/src/models';
+import { Actions, ofType } from '@ngrx/effects';
+import { ActionCreator, TypedAction } from '@ngrx/store/src/models';
 import { Observable } from 'rxjs';
-import { MapKeyToCreator, WithDispatchAndListenResult } from './types';
+import { WithDispatchAndListenResult } from './types';
 import { createUniqueAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
 
 // tslint:disable-next-line:typedef
-export function createAction<Name extends string, Namespace extends string, Action>(name: Name, namespace: Namespace) {
+function createAction<Name extends string, Namespace extends string, Action>(name: Name, namespace: Namespace) {
   const actionKey = makeActionKeyWithSuffix(name, '');
   type ActionKeyType = typeof actionKey;
 
   const actionType = makeNamespacedActionKey(namespace, actionKey);
   type ActionTypeType = typeof actionType;
 
-  return createUniqueAction<ActionTypeType, Action>(actionType);
+  const actionCreator = createUniqueAction<ActionTypeType, Action>(actionType);
+
+  type ActionBundle = Record<ActionKeyType, typeof actionCreator>;
+
+  const result = {
+    [actionKey]: actionCreator
+  };
+
+  return result as ActionBundle;
 }
 
 // tslint:disable-next-line:typedef
-export function createActionWithClear<
+function createActionWithClear<
   Name extends string,
   Namespace extends string,
   Action,
@@ -37,10 +45,10 @@ export function createActionWithClear<
   const actionCreator = createUniqueAction<ActionTypeType, Action>(actionType);
   const actionCancelCreator = createUniqueAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
 
-  type ActionMapType = MapKeyToCreator<{ t: typeof actionCreator }, ActionKeyType>;
-  type ActionCancelMapType = MapKeyToCreator<{ t: typeof actionCancelCreator }, ActionCancelKeyType>;
+  // type ActionMapType = MapKeyToCreator<{ t: typeof actionCreator }, ActionKeyType>;
+  // type ActionCancelMapType = MapKeyToCreator<{ t: typeof actionCancelCreator }, ActionCancelKeyType>;
 
-  type ActionBundle = ActionMapType & ActionCancelMapType;
+  type ActionBundle = Record<ActionKeyType, typeof actionCreator> & Record<ActionCancelKeyType, typeof actionCancelCreator>;
 
   const result = {
     [actionKey]: actionCreator,
@@ -51,13 +59,13 @@ export function createActionWithClear<
 }
 
 // tslint:disable-next-line:typedef
-export function createAsyncActionBundle<
+function createAsyncActionBundle<
   Name extends string,
   Namespace extends string,
-  Action,
-  ActionSuccess,
-  ActionFailure,
-  ActionCancel
+  Action = void,
+  ActionSuccess = void,
+  ActionFailure = void,
+  ActionCancel = void
 >(name: Name, ns: Namespace) {
   const actionKey = makeActionKeyWithSuffix(name, '');
   const actionSuccessKey = makeActionKeyWithSuffix(name, 'Success');
@@ -84,13 +92,11 @@ export function createAsyncActionBundle<
   const actionFailureCreator = createUniqueAction<ActionFailureTypeType, ActionFailure>(actionTypeFailure);
   const actionCancelCreator = createUniqueAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
 
-
-  type ActionMapType = MapKeyToCreator<{ t: typeof actionCreator }, ActionKeyType>;
-  type ActionSuccessMapType = MapKeyToCreator<{ t: typeof actionSuccessCreator }, ActionSuccessKeyType>;
-  type ActionFailureMapType = MapKeyToCreator<{ t: typeof actionFailureCreator }, ActionFailureKeyType>;
-  type ActionCancelMapType = MapKeyToCreator<{ t: typeof actionCancelCreator }, ActionCancelKeyType>;
-
-  type ActionBundle = ActionMapType & ActionSuccessMapType & ActionFailureMapType & ActionCancelMapType;
+  type ActionBundle =
+    Record<ActionKeyType, typeof actionCreator> &
+    Record<ActionSuccessKeyType, typeof actionSuccessCreator> &
+    Record<ActionFailureKeyType, typeof actionFailureCreator> &
+    Record<ActionCancelKeyType, typeof actionCancelCreator>;
 
   const result = {
     [actionKey]: actionCreator,
@@ -102,17 +108,15 @@ export function createAsyncActionBundle<
   return result as ActionBundle;
 }
 
-export type AsyncActionBundleResult = ReturnType<typeof createAsyncActionBundle>;
-
 // tslint:disable-next-line:typedef
-export function createAsyncActionBundleWithClear<
+function createAsyncActionBundleWithClear<
   Name extends string,
   Namespace extends string,
-  Action,
-  ActionSuccess,
-  ActionFailure,
-  ActionCancel,
-  ActionClear
+  Action = void,
+  ActionSuccess = void,
+  ActionFailure = void,
+  ActionCancel = void,
+  ActionClear = void
 >(name: Name, ns: Namespace) {
   const bundle = createAsyncActionBundle<Name, Namespace, Action, ActionSuccess, ActionFailure, ActionCancel>(name, ns);
   const actionClearKey = makeActionKeyWithSuffix(name, 'Clear');
@@ -123,18 +127,15 @@ export function createAsyncActionBundleWithClear<
 
   const actionClearCreator = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
 
-  type ActionClearMapType = MapKeyToCreator<{ t: typeof actionClearCreator }, ActionClearKeyType>;
+  // type ActionClearMapType = MapKeyToCreator<{ t: typeof actionClearCreator }, ActionClearKeyType>;
 
   (bundle as any)[actionClearKey] = actionClearCreator;
 
-  return bundle as typeof bundle & ActionClearMapType;
+  return bundle as typeof bundle & Record<ActionClearKeyType, typeof actionClearCreator>;
 }
 
-export type AsyncActionBundleWithClearResult = ReturnType<typeof createAsyncActionBundleWithClear>;
-
-
 // tslint:disable-next-line:typedef
-export function createActionStreamBundle<T>(this: any, bundle: T) {
+function createActionStreamBundle<T>(this: any, bundle: T) {
   const bundleEntries = Object.entries(bundle);
   const result = {} as any;
   for (const [key, value] of bundleEntries) {
@@ -169,14 +170,78 @@ function createActionDispatchBundle<T>(this: any, bundle: T) {
 
   return result as {
     [K in keyof T]:
-    T[K] extends (payload: infer P) => { payload: any } & TypedAction<any> ? (payload: P) => void : never
+    T[K] extends (payload: infer P) => { payload: any } & TypedAction<any> ?
+    (payload: P) => void : T[K] extends (...args: infer F) => TypedAction<any> ? (...args: F) => void :
+    T[K] extends () => TypedAction<any> ? () => TypedAction<any> : never;
   };
 }
 
-export function withDispatchAndListen<T>(bundle: T): WithDispatchAndListenResult<T> {
+// tslint:disable-next-line:typedef
+export function createAsyncBundle<
+  Name extends string,
+  Namespace extends string,
+  Action = void,
+  ActionSuccess = void,
+  ActionFailure = void,
+  ActionCancel = void
+>(name: Name, ns: Namespace) {
+  const bundle = createAsyncActionBundle<Name, Namespace, Action, ActionSuccess, ActionFailure, ActionCancel>(name, ns);
+  const listen = createActionStreamBundle(bundle);
+  const dispatch = createActionDispatchBundle(bundle);
+
+  return { listen, dispatch, creators: bundle };
+}
+
+// tslint:disable-next-line:typedef
+export function createAsyncBundleWithClear<
+  Name extends string,
+  Namespace extends string,
+  Action = void,
+  ActionSuccess = void,
+  ActionFailure = void,
+  ActionCancel = void,
+  ActionClear = void
+>(name: Name, ns: Namespace) {
+  const bundle = createAsyncActionBundleWithClear<
+    Name,
+    Namespace,
+    Action,
+    ActionSuccess,
+    ActionFailure,
+    ActionCancel,
+    ActionClear
+  >(name, ns);
+  const listen = createActionStreamBundle(bundle);
+  const dispatch = createActionDispatchBundle(bundle);
+
+  return { listen, dispatch, creators: bundle };
+}
+
+// tslint:disable-next-line:typedef
+export function createBundle<
+  Name extends string,
+  Namespace extends string,
+  Action = void
+>(name: Name, namespace: Namespace) {
+  const bundle = createAction<Name, Namespace, Action>(name, namespace);
 
   const listen = createActionStreamBundle(bundle);
   const dispatch = createActionDispatchBundle(bundle);
 
-  return { listen, dispatch };
+  return { listen, dispatch, creators: bundle };
+}
+
+// tslint:disable-next-line:typedef
+export function createBundleWithClear<
+  Name extends string,
+  Namespace extends string,
+  Action = void,
+  ActionClear = void
+>(name: Name, namespace: Namespace) {
+  const bundle = createActionWithClear<Name, Namespace, Action, ActionClear>(name, namespace);
+
+  const listen = createActionStreamBundle(bundle);
+  const dispatch = createActionDispatchBundle(bundle);
+
+  return { listen, dispatch, creators: bundle };
 }

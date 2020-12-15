@@ -2,13 +2,14 @@ import { Store, Action } from '@ngrx/store';
 import { Injectable } from '@angular/core';
 import { Actions } from '@ngrx/effects';
 import { deepAssign } from './utils';
-import { UnionToIntersection, WithDispatchAndListenResult } from './types';
-import { withDispatchAndListen } from './lib';
 import { Observable } from 'rxjs';
+
 
 class EmptyActionBundle {
   listen = {};
   dispatch = {};
+  creators = {};
+
   constructor($internal: { dispatch: any, actions$: any }) {
     this.listen = { $internal };
     this.dispatch = { $internal };
@@ -17,6 +18,7 @@ class EmptyActionBundle {
 
 @Injectable()
 export class Connect<S = object, A = Action> {
+
 
   constructor(
     private store: Store<S>,
@@ -36,12 +38,15 @@ export class Connect<S = object, A = Action> {
     };
   }
 
-  connectActionBundles<T>(bundles: T[]): UnionToIntersection<EmptyActionBundle | WithDispatchAndListenResult<T>> {
-    const bundlesWithDispatchAndListen = bundles.map(b => withDispatchAndListen(b));
+  // tslint:disable-next-line:typedef
+  connectActionBundles<T>(bundles: T[]) {
+
     const $internal = {
       dispatch: this.store.dispatch.bind(this.store),
       actions$: this.actions$
     };
-    return deepAssign(new EmptyActionBundle($internal), ...bundlesWithDispatchAndListen);
+
+    const empty = new EmptyActionBundle($internal) as { dispatch: {}, listen: {}, creators: {} };
+    return deepAssign(empty, ...bundles);
   }
 }

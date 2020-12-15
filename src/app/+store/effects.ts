@@ -1,26 +1,25 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Actions, createEffect } from '@ngrx/effects';
 import { Connect } from 'ngrx-action-bundles';
 import { catchError, map, switchMap, takeUntil } from 'rxjs/operators';
 import { IUser } from '../interfaces';
-import { loadUsers } from './actions';
+import { loadUsersBundle, test, testBundle } from './actions';
 
 @Injectable()
 export class UserListEffects {
 
-  actions = this.connect.connectActionBundles([loadUsers]);
+  actions = this.connect.connectActionBundles([loadUsersBundle, testBundle]);
 
   loadUsers = createEffect(() => this.actions.listen.loadUsers$.pipe(switchMap(
     () => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(
-      takeUntil(this.actions$.pipe(ofType(loadUsers.loadUsersCancel))),
-      map(users => loadUsers.loadUsersSuccess({ users })),
-      catchError(error => [loadUsers.loadUsersFailure({ error })])
+      takeUntil(this.actions.listen.loadUsersCancel$),
+      map(users => this.actions.creators.loadUsersSuccess({ users })),
+      catchError(error => [this.actions.creators.loadUsersFailure({ error })])
     )
   )));
 
   constructor(
-    private actions$: Actions,
     private http: HttpClient,
     private connect: Connect
   ) { }

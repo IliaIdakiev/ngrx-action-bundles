@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Connect, withDispatchAndListen } from 'ngrx-action-bundles';
-import { clearItem, loadUsers, setItem } from '../+store/actions';
+import { Connect } from 'ngrx-action-bundles';
+import { loadUsersBundle, testBundle } from '../+store/actions';
 import { selectUserList } from '../+store/selectors';
 import { merge, Subscription } from 'rxjs';
 import { mapTo } from 'rxjs/operators';
@@ -14,7 +14,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   subscriptions = new Subscription();
 
-  actions = this.connect.connectActionBundles([loadUsers]);
+  actions = this.connect.connectActionBundles([
+    loadUsersBundle,
+    testBundle
+  ]);
+
   selectors = this.connect.connectSelectors({ userList: selectUserList });
 
   users$ = this.selectors.userList$;

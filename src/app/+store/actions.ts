@@ -1,12 +1,11 @@
-import { createAction, props } from '@ngrx/store';
-import { createAsyncActionBundleWithClear } from 'ngrx-action-bundles';
+import { createAsyncBundleWithClear, createBundleWithClear } from 'ngrx-action-bundles';
 import { IHttpRequestError, ILoadUsersSuccessPayload } from '../interfaces';
 
 const actionNamespace = '[MAIN]';
 
 const loadUsersActionName = 'loadUsers';
 
-export const loadUsers = createAsyncActionBundleWithClear<
+export const loadUsersBundle = createAsyncBundleWithClear<
   typeof loadUsersActionName, typeof actionNamespace,
   void,
   ILoadUsersSuccessPayload,
@@ -14,6 +13,7 @@ export const loadUsers = createAsyncActionBundleWithClear<
   void,
   void
 >(loadUsersActionName, actionNamespace);
+export const loadUsers = loadUsersBundle.creators;
 
-export const setItem = createAction(`${actionNamespace} setItem`, props<{ item: any }>());
-export const clearItem = createAction(`${actionNamespace} clearItem`);
+export const testBundle = createBundleWithClear('Test', actionNamespace);
+export const test = testBundle.creators;

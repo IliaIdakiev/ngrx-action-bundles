@@ -1,5 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
-import { clearItem, loadUsers, setItem } from './actions';
+import { loadUsers } from './actions';
 import { IUser } from '../interfaces';
 
 export interface IUserListState {
@@ -27,11 +27,5 @@ export const userListReducer = createReducer<IUserListState>(
   }),
   on(loadUsers.loadUsersClear, (status) => {
     return { ...status, userList: null };
-  }),
-  on(setItem, (state, { item }) => {
-    return { ...state, item };
-  }),
-  on(clearItem, (state, action) => {
-    return { ...state, item: null };
   })
 );
