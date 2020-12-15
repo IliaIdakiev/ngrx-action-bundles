@@ -20,8 +20,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   ]);
 
   selectors = this.connect.connectSelectors({
-    userList: selectMainItem,
-    item: selectMainUserList
+    userList: selectMainUserList,
+    item: selectMainItem
   });
 
   users$ = this.selectors.userList$;

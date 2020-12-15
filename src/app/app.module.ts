@@ -23,9 +23,9 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    StoreDevtoolsModule.instrument(),
     EffectsModule.forRoot([UserListEffects]),
     StoreModule.forRoot(reducers),
+    StoreDevtoolsModule.instrument(),
     NgrxActionBundlesModule
   ],
   providers: [],

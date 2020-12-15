@@ -255,8 +255,8 @@ some.component.ts
 ```typescript
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Connect } from 'ngrx-action-bundles';
-import { loadUsers } from '../+store/actions';
-import { selectUserList } from '../+store/selectors';
+import { loadUsersBundle, itemBundle } from '../+store/actions';
+import { selectMainUserList, selectMainItem } from '../+store/selectors';
 import { merge, Subscription } from 'rxjs';
 import { mapTo } from 'rxjs/operators';
 
@@ -281,8 +281,8 @@ export class SomeComponent implements OnInit, OnDestroy {
   ]);
 
   selectors = this.connect.connectSelectors({
-    userList: selectMainItem,
-    item: selectMainUserList
+    userList: selectMainUserList,
+    item: selectMainItem
   });
 
   users$ = this.selectors.userList$;
