@@ -2,7 +2,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { ActionCreator, TypedAction } from '@ngrx/store/src/models';
 import { Observable } from 'rxjs';
 import { WithDispatchAndListenResult } from './types';
-import { createUniqueAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
+import { capitalize, createUniqueAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
 
 // tslint:disable-next-line:typedef
 function createAction<Name extends string, Namespace extends string, Action>(name: Name, namespace: Namespace) {
@@ -30,14 +30,14 @@ function createActionWithClear<
   Action,
   ActionCancel
 >(name: Name, namespace: Namespace) {
-  const actionKey = makeActionKeyWithSuffix(name, '');
-  const actionCancelKey = makeActionKeyWithSuffix(name, 'Cancel');
+  const actionKey = makeActionKeyWithSuffix('set', capitalize(name));
+  const actionClearKey = makeActionKeyWithSuffix('clear', capitalize(name));
 
   type ActionKeyType = typeof actionKey;
-  type ActionCancelKeyType = typeof actionCancelKey;
+  type ActionClearKeyType = typeof actionClearKey;
 
   const actionType = makeNamespacedActionKey(namespace, actionKey);
-  const actionTypeCancel = makeNamespacedActionKey(namespace, actionCancelKey);
+  const actionTypeCancel = makeNamespacedActionKey(namespace, actionClearKey);
 
   type ActionTypeType = typeof actionType;
   type ActionCancelTypeType = typeof actionTypeCancel;
@@ -45,14 +45,11 @@ function createActionWithClear<
   const actionCreator = createUniqueAction<ActionTypeType, Action>(actionType);
   const actionCancelCreator = createUniqueAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
 
-  // type ActionMapType = MapKeyToCreator<{ t: typeof actionCreator }, ActionKeyType>;
-  // type ActionCancelMapType = MapKeyToCreator<{ t: typeof actionCancelCreator }, ActionCancelKeyType>;
-
-  type ActionBundle = Record<ActionKeyType, typeof actionCreator> & Record<ActionCancelKeyType, typeof actionCancelCreator>;
+  type ActionBundle = Record<ActionKeyType, typeof actionCreator> & Record<ActionClearKeyType, typeof actionCancelCreator>;
 
   const result = {
     [actionKey]: actionCreator,
-    [actionCancelKey]: actionCancelCreator
+    [actionClearKey]: actionCancelCreator
   };
 
   return result as ActionBundle;

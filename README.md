@@ -8,52 +8,125 @@
 
 actions.ts
 ```typescript
-import { createAction, props } from '@ngrx/store';
-import { createAsyncActionBundleWithClear } from 'ngrx-action-bundles';
+import { createAsyncBundleWithClear, createBundleWithClear } from 'ngrx-action-bundles';
 import { IHttpRequestError, ILoadUsersSuccessPayload } from '../interfaces';
 
-const actionNamespace = '[MAIN]';
+const actionNamespace = '[MAIN]' as const;
 
-const loadUsersActionName = 'loadUsers';
+const loadUsersActionName = 'loadUsers' as const;
+const itemActionName = 'item' as const;
 
 /* *
  *  <NGRX Action Bundles> Available functions:
  * 
- *  - createAction<NameType, NamespaceType, ActionPayloadType>(actionName, namespace)
+ *  - createBundle<NameType, NamespaceType, ActionPayloadType>(actionName, namespace)
  *    
- *    Creates <actionName> action      --> { type: <[namespace] action_name>, payload: ActionPayloadType };
+ *    Creates <actionName> action      --> { type: <[namespace] <actionName>>, payload: ActionPayloadType };
+ *    
+ *    Returns: { 
+ *      dispatch: { 
+ *        [<actionName>]: (payload: ActionPayloadType) => void 
+ *      },
+ *      listen: { 
+ *        [<actionName>$]: Observable<{ type: <[namespace] <actionName>>, payload: ActionPayloadType }> 
+ *      },
+ *      creators: { 
+ *        [<actionName>]: (payload: ActionPayloadType) => { type: <[namespace] <actionName>>, payload: ActionPayloadType }
+ *      }
+ *    }
  * 
- *  - createActionWithClear<NameType, NamespaceType, ActionPayloadType, ClearActionPayloadType>(actionName, namespace)
+ *  - createBundleWithClear<NameType, NamespaceType, ActionPayloadType, ClearActionPayloadType>(actionName, namespace)
  * 
- *    Creates <actionName> action      --> { type: <[namespace] action_name>, payload: ActionPayloadType };
- *    Creates <actionName>Clear action --> { type: <[namespace] action_nameClear>, payload: ClearActionPayloadType };
+ *    Creates set<ActionName> action      --> { type: <[namespace] set<ActionName>>, payload: ActionPayloadType };
+ *    Creates clear<ActionName> action    --> { type: <[namespace] clear<ActionName>>, payload: ClearActionPayloadType };
  * 
- *  - createAsyncActionBundle<
+ *    Returns: { 
+ *      dispatch: { 
+ *        [set<ActionName>]: (payload: ActionPayloadType) => void,
+ *        [clera<ActionName>]: (payload: ClearActionPayloadType) => void
+ *      },
+ *      listen: { 
+ *        [set<ActionName>$]: Observable<{ type: <[namespace] set<ActionName>>, payload: ActionPayloadType }>,
+ *        [clear<ActionName>$]: Observable<{ type: <[namespace] clear<ActionName>>, payload: ClearActionPayloadType }>,
+ *      },
+ *      creators: { 
+ *        [set<ActionName>]: (payload: ActionPayloadType) => { type: <[namespace] set<ActionName>>, payload: ActionPayloadType },
+ *        [clear<AtionName>]: (payload: ClearActionPayloadType) => { type: <[namespace] clear<ActionName>>, payload: ClearActionPayloadType },
+ *      }
+ *    }
+ * 
+ *  - createAsyncBundle<
  *      NameType, NamespaceType, 
  *      ActionPayloadType, ActionSuccessPayloadType, 
  *      ActionFailurePayloadType, ActionCancelPayloadType
  *    >(actionName, namespace)
  * 
- *    Creates <actionName>             --> { type: <[namespace] action_name>, payload: ActionPayloadType }; 
- *    Creates <actionName>Success      --> { type: <[namespace] action_nameSuccess>, payload: ActionSuccessPayloadType };
- *    Creates <actionName>Failure      --> { type: <[namespace] action_nameFailure>, payload: ActionFailurePayloadType }
- *    Creates <actionName>Cancel       --> { type: <[namespace] action_nameCancel>, payload: ActionCancelPayloadType }
+ *    Creates <actionName>             --> { type: <[namespace] <actionName>>, payload: ActionPayloadType }; 
+ *    Creates <actionName>Success      --> { type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType };
+ *    Creates <actionName>Failure      --> { type: <[namespace] <actionName>Failure>, payload: ActionFailurePayloadType }
+ *    Creates <actionName>Cancel       --> { type: <[namespace] <actionName>Cancel>, payload: ActionCancelPayloadType }
  * 
- *  - createAsyncActionBundleWithClear<
+ *    Returns: { 
+ *      dispatch: { 
+ *        [<actionName>]: (payload: ActionPayloadType) => void,
+ *        [<actionName>Success]: (payload: ActionSuccessPayloadType) => void,
+ *        [<actionName>Failure]: (payload: ActionFailurePayloadType) => void,
+ *        [<actionName>Cancel]: (payload: ActionCancelPayloadType) => void,
+ *      },
+ *      listen: { 
+ *        [<actionName>$]: Observable<{ type: <[namespace] <actionName>>, payload: ActionPayloadType }>,
+ *        [<actionName>Success$]: Observable<{ type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType }>,
+ *        [<actionName>Failure$]: Observable<{ type: <[namespace] <actionName>Failure>, payload: ActionFailurePayloadType }>,
+ *        [<actionName>Cancel$]: Observable<{ type: <[namespace] <actionName>Cancel>, payload: ActionCancelPayloadType }>,
+ *      },
+ *      creators: { 
+ *        [<actionName>]: (payload: ActionPayloadType) => { type: <[namespace] <actionName>>, payload: ActionPayloadType },
+ *        [<actionName>Success]: (payload: ActionSuccessPayloadType) => { type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType },
+ *        [<actionName>Failure]: (payload: ActionFailurePayloadType) => { type: <[namespace] <actionName>Failure>, payload: ActionFailurePayloadType },
+ *        [<actionName>Cancel]: (payload: ActionCancelPayloadType) => { type: <[namespace] <actionName>Cancel>, payload: ActionCancelPayloadType },
+ *      }
+ *    }
+ * 
+ *  - createAsyncBundleWithClear<
  *      NameType, NamespaceType, 
  *      ActionPayloadType, ActionSuccessPayloadType, 
  *      ActionFailurePayloadType, ActionCancelPayloadType, ClearActionPayloadType
  *    >(actionName, namespace)
  * 
- *    Creates <actionName>             --> { type: <[namespace] action_name>, payload: ActionPayloadType }; 
- *    Creates <actionName>Success      --> { type: <[namespace] action_nameSuccess>, payload: ActionSuccessPayloadType };
- *    Creates <actionName>Failure      --> { type: <[namespace] action_nameFailure>, payload: ActionFailurePayloadType }
- *    Creates <actionName>Cancel       --> { type: <[namespace] action_nameCancel>, payload: ActionCancelPayloadType }
- *    Creates <actionName>Clear action --> { type: <[namespace] action_nameClear>, payload: ClearActionPayloadType };
+ *    Creates <actionName>             --> { type: <[namespace] <actionName>>, payload: ActionPayloadType }; 
+ *    Creates <actionName>Success      --> { type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType };
+ *    Creates <actionName>Failure      --> { type: <[namespace] <actionName>Failure>, payload: ActionFailurePayloadType }
+ *    Creates <actionName>Cancel       --> { type: <[namespace] <actionName>Cancel>, payload: ActionCancelPayloadType }
+ *    Creates <actionName>Clear        --> { type: <[namespace] <actionName>Clear>, payload: ClearActionPayloadType };
+ * 
+ *    Returns: { 
+ *      dispatch: { 
+ *        [<actionName>]: (payload: ActionPayloadType) => void,
+ *        [<actionName>Success]: (payload: ActionSuccessPayloadType) => void,
+ *        [<actionName>Failure]: (payload: ActionFailurePayloadType) => void,
+ *        [<actionName>Cancel]: (payload: ActionCancelPayloadType) => void,
+ *        [<actionName>Clear]: (payload: ClearActionPayloadType) => void
+ *      },
+ *      listen: { 
+ *        [<actionName>$]: Observable<{ type: <[namespace] <actionName>>, payload: ActionPayloadType }>,
+ *        [<actionName>Success$]: Observable<{ type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType }>,
+ *        [<actionName>Failure$]: Observable<{ type: <[namespace] <actionName>Failure>, payload: ActionFailurePayloadType }>,
+ *        [<actionName>Cancel$]: Observable<{ type: <[namespace] <actionName>Cancel>, payload: ActionCancelPayloadType }>,
+ *        [<actionName>Clear$]: Observable<{ type: <[namespace] <actionName>Clear>, payload: ClearActionPayloadType }>,
+ *      },
+ *      creators: { 
+ *        [<actionName>]: (payload: ActionPayloadType) => { type: <[namespace] <actionName>>, payload: ActionPayloadType },
+ *        [<actionName>Success]: (payload: ActionSuccessPayloadType) => { type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType },
+ *        [<actionName>Failure]: (payload: ActionFailurePayloadType) => { type: <[namespace] <actionName>Failure>, payload: ActionFailurePayloadType },
+ *        [<actionName>Cancel]: (payload: ActionCancelPayloadType) => { type: <[namespace] <actionName>Cancel>, payload: ActionCancelPayloadType },
+ *        [<actionName>Clear]: (payload: ClearActionPayloadType) => { type: <[namespace] <actionName>Clear>, payload: ClearActionPayloadType },
+ *      }
+ *    }
  * */
 
-export const loadUsers = createAsyncActionBundleWithClear<
-  typeof loadUsersActionName, typeof actionNamespace,
+export const loadUsersBundle = createAsyncBundleWithClear<
+  typeof loadUsersActionName, 
+  typeof actionNamespace,
   void,
   ILoadUsersSuccessPayload,
   IHttpRequestError,
@@ -61,18 +134,13 @@ export const loadUsers = createAsyncActionBundleWithClear<
   void
 >(loadUsersActionName, actionNamespace);
 
-/* Or you can just create an action using the createAction fn */
-
-export const setItem = createAction(`${actionNamespace} setItem`, props<{ item: any }>); 
-// -> { type: <[namespace] setItem>, item: any };
-export const clearItem = createAction(`${actionNamespace} clearItem`);
-// -> { type: <[namespace] clearItem> };
+export const itemBundle = createBundleWithClear(setItemActionName, actionNamespace);
 ```
 
 reducers.ts
 ```typescript
 import { createReducer, on } from '@ngrx/store';
-import { loadUsers, setItem, clearItem } from './actions';
+import { loadUsersBundle, itemBundle } from './actions';
 import { IUser } from '../interfaces';
 
 export interface IUserListState {
@@ -92,24 +160,23 @@ export const initialState: IUserListState = {
 
 export const userListReducer = createReducer<IUserListState>(
   initialState,
-  on(loadUsers.loadUsers, (state) => {
+  on(loadUsersBundle.creators.loadUsers, (state) => {
     return { ...state, userList: null };
   }),
   // since loadUsersSuccess is generated from the bundle we have a payload which contains our data
-  on(loadUsers.loadUsersSuccess, (state, { payload: { users } }) => {
+  on(loadUsersBundle.creators.loadUsersSuccess, (state, { payload: { users } }) => {
     return { ...state, userList: users };
   }),
-  on(loadUsers.loadUsersFailure, (status, { payload: { error: { message } } }) => {
+  on(loadUsersBundle.creators.loadUsersFailure, (status, { payload: { error: { message } } }) => {
     return { ...status, error: message };
   }),
-  on(loadUsers.loadUsersClear, (status) => {
+  on(loadUsersBundle.creators.loadUsersClear, (status) => {
     return { ...status, userList: null };
   }),
-  on(setItem, (state, action) => {
-    // since setItem is generated by the default createAction with props<{ item: any }> we don't have payload
-    return { ...state, item: action.item };
+  on(itemBundle.creators.setItem, (state, { payload: { item } }) => {
+    return { ...state, item };
   }),
-  on(clearItem, (state, action) => {
+  on(itemBundle.creators.clearItem, (state) => {
     return { ...state, item: null };
   })
 );
@@ -130,24 +197,21 @@ export class UserListEffects {
 
   /* *
    * Here we use the <NGRX Action Bundles> `connect` service in order to connect
-   * our action bundles to a property called actions on our component. For all the provided bundles
-   * the `connectActionBundles` will create the dispatchers and the listeners (rxjs streams) 
-   * so we can use them inside the component.
+   * our bundles to a property called actions on our injectable.
    * 
    * */
 
-  actions = this.connect.connectActionBundles([loadUsers]);
+  actions = this.connect.connectBundles([loadUsersBundle]);
 
   loadUsers = createEffect(() => this.actions.listen.loadUsers$.pipe(switchMap(
     () => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(
-      takeUntil(this.actions$.pipe(ofType(loadUsers.loadUsersCancel))),
-      map(users => loadUsers.loadUsersSuccess({ users })),
-      catchError(error => [loadUsers.loadUsersFailure({ error })])
+      takeUntil(this.actions.listen.loadUsersCancel$),
+      map(users => this.actions.creators.loadUsersSuccess({ users })),
+      catchError(error => [this.actions.creators.loadUsersFailure({ error })])
     )
   )));
 
   constructor(
-    private actions$: Actions,
     private http: HttpClient,
     private connect: Connect
   ) { }
@@ -157,21 +221,28 @@ export class UserListEffects {
 selectors.ts
 ```typescript
 import { createSelector } from '@ngrx/store';
+import { ActionReducerMap } from '@ngrx/store';
 
 export interface IRootState {
-  readonly user: IUserListState;
+  readonly main: IMainState;
 }
 
 export const reducers: ActionReducerMap<IRootState> = {
-  user: userListReducer
+  main: mainReducer
 };
 
-export const selectUser = (state: IRootState) => state.user;
+export const selectMain = (state: IRootState) => state.main;
 
-export const selectUserList = createSelector(
-  selectUser,
-  (state: IUserListState) => state.userList
+export const selectMainUserList = createSelector(
+  selectMain,
+  (state: IMainState) => state.userList
 );
+
+export const selectMainItem = createSelector(
+  selectMain,
+  (state: IMainState) => state.item
+);
+
 ```
 
 some.component.ts
@@ -190,18 +261,26 @@ export class SomeComponent implements OnInit, OnDestroy {
 
   /* *
    * Here we use the <NGRX Action Bundles> `connect` service in order to connect
-   * our action bundles to a property called actions on our component. For all the provided bundles
-   * the `connectActionBundles` will create the dispatchers and the listeners (rxjs streams) 
-   * so we can use them inside the component.
+   * the bundles to a property called actions on our component.
    * 
    * We also use `connectSelectors` to connect all the selectors to the selectors property so we can
-   * directly access the streams from the store.
+   * directly access the rxjs streams from the store.
    * */
 
-  actions = this.connect.connectActionBundles([loadUsers]);
-  selectors = this.connect.connectSelectors({ userList: selectUserList });
+  subscriptions = new Subscription();
+
+  actions = this.connect.connectBundles([
+    loadUsersBundle,
+    itemBundle
+  ]);
+
+  selectors = this.connect.connectSelectors({
+    userList: selectMainItem,
+    item: selectMainUserList
+  });
 
   users$ = this.selectors.userList$;
+  item$ = this.selectors.item$;
 
   isLoading = false;
 
@@ -215,10 +294,20 @@ export class SomeComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnInit(): void { this.loadUsers(); }
+  ngOnInit(): void {
+    this.actions.dispatch.loadUsers();
 
+    this.subscriptions.add(
+      this.actions.listen.loadUsersSuccess$.subscribe(console.log)
+    );
+    this.subscriptions.add(
+      this.actions.listen.loadUsersCancel$.subscribe(console.log)
+    );
+    this.subscriptions.add(
+      this.actions.listen.loadUsersClear$.subscribe(console.log)
+    );
+  }
 
-  loadUsers(): void { this.actions.dispatch.loadUsers(); }
 
   ngOnDestroy(): void {
     if (this.isLoading) { this.actions.dispatch.loadUsersCancel(); }
@@ -227,4 +316,20 @@ export class SomeComponent implements OnInit, OnDestroy {
   }
 }
 
+```
+
+some.component.html
+```html
+<div>
+  <h1>User List</h1>
+  <div *ngIf="isLoading">Loading...</div>
+  <div *ngFor="let user of (users$ | async)">{{user.username}}</div>
+  <button (click)="actions.dispatch.loadUsers()">Reload Users</button>
+</div>
+<div>
+  <h1>Message Item is: {{item$ | async}}</h1>
+  <input #inp type="text" value="">
+  <button (click)="actions.dispatch.setItem({ item: inp.value }); inp.value = ''">Set item in store</button>
+  <button (click)="actions.dispatch.clearItem()">Clear item in store</button>
+</div>
 ```

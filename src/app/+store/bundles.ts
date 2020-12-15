@@ -3,7 +3,7 @@ import { IHttpRequestError, ILoadUsersSuccessPayload } from '../interfaces';
 
 const actionNamespace = '[MAIN]';
 
-const loadUsersActionName = 'loadUsers';
+const loadUsersActionName = 'loadUsers' as const;
 
 export const loadUsersBundle = createAsyncBundleWithClear<
   typeof loadUsersActionName, typeof actionNamespace,
@@ -13,7 +13,11 @@ export const loadUsersBundle = createAsyncBundleWithClear<
   void,
   void
 >(loadUsersActionName, actionNamespace);
-export const loadUsers = loadUsersBundle.creators;
 
-export const testBundle = createBundleWithClear('Test', actionNamespace);
-export const test = testBundle.creators;
+const itemActionName = 'item' as const;
+
+export const itemBundle = createBundleWithClear<
+  typeof itemActionName,
+  typeof actionNamespace,
+  { item: string }
+>(itemActionName, actionNamespace);

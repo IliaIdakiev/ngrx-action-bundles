@@ -1,10 +1,15 @@
 import { createSelector } from '@ngrx/store';
 import { IRootState } from './index';
-import { IUserListState } from './reducers';
+import { IMainState } from './reducers';
 
-export const selectUser = (state: IRootState) => state.user;
+export const selectMain = (state: IRootState) => state.main;
 
-export const selectUserList = createSelector(
-  selectUser,
-  (state: IUserListState) => state.userList
+export const selectMainUserList = createSelector(
+  selectMain,
+  (state: IMainState) => state.userList
+);
+
+export const selectMainItem = createSelector(
+  selectMain,
+  (state: IMainState) => state.item
 );

@@ -1,31 +1,37 @@
 import { createReducer, on } from '@ngrx/store';
-import { loadUsers } from './actions';
+import { loadUsersBundle, itemBundle } from './bundles';
 import { IUser } from '../interfaces';
 
-export interface IUserListState {
+export interface IMainState {
   userList: IUser[] | null;
   error: string | null;
   item: any;
 }
 
-export const initialState: IUserListState = {
+export const initialState: IMainState = {
   userList: null,
   error: null,
   item: null
 };
 
-export const userListReducer = createReducer<IUserListState>(
+export const mainReducer = createReducer<IMainState>(
   initialState,
-  on(loadUsers.loadUsers, (state) => {
+  on(loadUsersBundle.creators.loadUsers, (state) => {
     return { ...state, userList: null };
   }),
-  on(loadUsers.loadUsersSuccess, (state, { payload: { users } }) => {
+  on(loadUsersBundle.creators.loadUsersSuccess, (state, { payload: { users } }) => {
     return { ...state, userList: users };
   }),
-  on(loadUsers.loadUsersFailure, (status, { payload: { error: { message } } }) => {
+  on(loadUsersBundle.creators.loadUsersFailure, (status, { payload: { error: { message } } }) => {
     return { ...status, error: message };
   }),
-  on(loadUsers.loadUsersClear, (status) => {
+  on(loadUsersBundle.creators.loadUsersClear, (status) => {
     return { ...status, userList: null };
+  }),
+  on(itemBundle.creators.setItem, (state, { payload: { item } }) => {
+    return { ...state, item };
+  }),
+  on(itemBundle.creators.clearItem, (state) => {
+    return { ...state, item: null };
   })
 );

@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Connect } from 'ngrx-action-bundles';
-import { loadUsersBundle, testBundle } from '../+store/actions';
-import { selectUserList } from '../+store/selectors';
+import { loadUsersBundle, itemBundle } from '../+store/bundles';
+import { selectMainUserList, selectMainItem } from '../+store/selectors';
 import { merge, Subscription } from 'rxjs';
 import { mapTo } from 'rxjs/operators';
 
@@ -14,14 +14,18 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   subscriptions = new Subscription();
 
-  actions = this.connect.connectActionBundles([
+  actions = this.connect.connectBundles([
     loadUsersBundle,
-    testBundle
+    itemBundle
   ]);
 
-  selectors = this.connect.connectSelectors({ userList: selectUserList });
+  selectors = this.connect.connectSelectors({
+    userList: selectMainItem,
+    item: selectMainUserList
+  });
 
   users$ = this.selectors.userList$;
+  item$ = this.selectors.item$;
 
   isLoading = false;
 
@@ -36,7 +40,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.actions.dispatch.loadUsers();
 
     this.subscriptions.add(
       this.actions.listen.loadUsersSuccess$.subscribe(console.log)
@@ -49,10 +53,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     );
   }
 
-
-  loadUsers(): void {
-    this.actions.dispatch.loadUsers();
-  }
 
   ngOnDestroy(): void {
     if (this.isLoading) { this.actions.dispatch.loadUsersCancel(); }

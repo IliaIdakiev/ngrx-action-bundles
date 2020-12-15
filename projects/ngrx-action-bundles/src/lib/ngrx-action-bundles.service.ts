@@ -39,7 +39,7 @@ export class Connect<S = object, A = Action> {
   }
 
   // tslint:disable-next-line:typedef
-  connectActionBundles<T>(bundles: T[]) {
+  connectBundles<T>(bundles: T[]) {
 
     const $internal = {
       dispatch: this.store.dispatch.bind(this.store),

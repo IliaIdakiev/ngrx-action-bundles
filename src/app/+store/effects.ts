@@ -4,12 +4,12 @@ import { Actions, createEffect } from '@ngrx/effects';
 import { Connect } from 'ngrx-action-bundles';
 import { catchError, map, switchMap, takeUntil } from 'rxjs/operators';
 import { IUser } from '../interfaces';
-import { loadUsersBundle, test, testBundle } from './actions';
+import { loadUsersBundle } from './bundles';
 
 @Injectable()
 export class UserListEffects {
 
-  actions = this.connect.connectActionBundles([loadUsersBundle, testBundle]);
+  actions = this.connect.connectBundles([loadUsersBundle]);
 
   loadUsers = createEffect(() => this.actions.listen.loadUsers$.pipe(switchMap(
     () => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(

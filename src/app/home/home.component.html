@@ -1,3 +1,12 @@
-<div *ngIf="isLoading">Loading...</div>
-<div *ngFor="let user of (users$ | async)">{{user.username}}</div>
-<button (click)="loadUsers()">Reload Users</button>
+<div>
+  <h1>User List</h1>
+  <div *ngIf="isLoading">Loading...</div>
+  <div *ngFor="let user of (users$ | async)">{{user.username}}</div>
+  <button (click)="actions.dispatch.loadUsers()">Reload Users</button>
+</div>
+<div>
+  <h1>Message Item is: {{item$ | async}}</h1>
+  <input #inp type="text" value="">
+  <button (click)="actions.dispatch.setItem({ item: inp.value }); inp.value = ''">Set item in store</button>
+  <button (click)="actions.dispatch.clearItem()">Clear item in store</button>
+</div>

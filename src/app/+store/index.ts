@@ -1,11 +1,11 @@
 import { ActionReducerMap } from '@ngrx/store';
-import { IUserListState } from './reducers';
-import { userListReducer } from './reducers';
+import { IMainState } from './reducers';
+import { mainReducer } from './reducers';
 
 export interface IRootState {
-  readonly user: IUserListState;
+  readonly main: IMainState;
 }
 
 export const reducers: ActionReducerMap<IRootState> = {
-  user: userListReducer
+  main: mainReducer
 };
