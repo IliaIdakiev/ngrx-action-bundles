@@ -10,7 +10,29 @@ TODO:
 
 ## USAGE:
 `npm install ngrx-action-bundles` || `yarn add ngrx-action-bundles`
+
 ### Example:
+app.module.ts
+```typescript
+import { NgModule } from '@angular/core';
+import { NgrxActionBundlesModule } from 'ngrx-action-bundles';
+import { reducers } from './+store/reducers';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
+@NgModule({
+  imports: [
+    EffectsModule.forRoot([...]),
+    StoreModule.forRoot(reducers),
+    StoreDevtoolsModule.instrument(),
+    NgrxActionBundlesModule // <--- Add the NgrxActionBundlesModule in order to be able to use the connect service
+  ],
+  ...
+})
+export class AppModule { }
+
+```
 
 actions.ts
 ```typescript
