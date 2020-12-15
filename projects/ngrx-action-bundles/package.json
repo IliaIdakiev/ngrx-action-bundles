@@ -9,5 +9,22 @@
   },
   "dependencies": {
     "tslib": "^2.0.0"
-  }
+  },
+  "author": {
+    "name": "Iliya Idakiev",
+    "url": "https://developers.google.com/community/experts/directory/profile/profile-iliya_idakiev"
+  },
+  "homepage": "https://github.com/IliaIdakiev/ngrx-action-bundles",
+  "license": "MIT",
+  "keywords": [
+    "ngrx action bundles",
+    "angular action bundles",
+    "ngrx utils",
+    "ngrx util",
+    "ngrx tools",
+    "ngrx tool",
+    "ngrx helpers",
+    "ngrx helper",
+    "angular"
+  ]
 }
