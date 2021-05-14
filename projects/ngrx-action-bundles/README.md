@@ -45,7 +45,7 @@ const itemActionName = 'item' as const;
 /* *
  *  <NGRX Action Bundles> Available functions:
  * 
- *  - createBundle<NameType, NamespaceType, ActionPayloadType>(actionName, namespace)
+ *  - createBundle<NameType, NamespaceType>(actionName, namespace)<ActionPayloadType>()
  *    
  *    Creates <actionName> action      --> { type: <[namespace] <actionName>>, payload: ActionPayloadType };
  *    
@@ -61,7 +61,7 @@ const itemActionName = 'item' as const;
  *      }
  *    }
  * 
- *  - createBundleWithClear<NameType, NamespaceType, ActionPayloadType, ClearActionPayloadType>(actionName, namespace)
+ *  - createBundleWithClear<NameType, NamespaceType)<ActionPayloadType, ClearActionPayloadType>(actionName, namespace>()
  * 
  *    Creates set<ActionName> action      --> { type: <[namespace] set<ActionName>>, payload: ActionPayloadType };
  *    Creates clear<ActionName> action    --> { type: <[namespace] clear<ActionName>>, payload: ClearActionPayloadType };
@@ -81,11 +81,12 @@ const itemActionName = 'item' as const;
  *      }
  *    }
  * 
- *  - createAsyncBundle<
- *      NameType, NamespaceType, 
- *      ActionPayloadType, ActionSuccessPayloadType, 
- *      ActionFailurePayloadType, ActionCancelPayloadType
- *    >(actionName, namespace)
+ *  - createAsyncBundle<NameType, NamespaceType>(actionName, namespace)<
+ *      ActionPayloadType, 
+ *      ActionSuccessPayloadType, 
+ *      ActionFailurePayloadType 
+ *      ActionCancelPayloadType
+ *    >()
  * 
  *    Creates <actionName>             --> { type: <[namespace] <actionName>>, payload: ActionPayloadType }; 
  *    Creates <actionName>Success      --> { type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType };
@@ -113,11 +114,10 @@ const itemActionName = 'item' as const;
  *      }
  *    }
  * 
- *  - createAsyncBundleWithClear<
- *      NameType, NamespaceType, 
+ *  - createAsyncBundleWithClear<NameType, NamespaceType>(actionName, namespace)<
  *      ActionPayloadType, ActionSuccessPayloadType, 
- *      ActionFailurePayloadType, ActionCancelPayloadType, ClearActionPayloadType
- *    >(actionName, namespace)
+ *      ActionFailurePayloadType, ActionCancelPayloadType, 
+ *      ClearActionPayloadType>()
  * 
  *    Creates <actionName>             --> { type: <[namespace] <actionName>>, payload: ActionPayloadType }; 
  *    Creates <actionName>Success      --> { type: <[namespace] <actionName>Success>, payload: ActionSuccessPayloadType };
@@ -150,17 +150,15 @@ const itemActionName = 'item' as const;
  *    }
  * */
 
-export const loadUsersBundle = createAsyncBundleWithClear<
-  typeof loadUsersActionName, 
-  typeof actionNamespace,
+export const loadUsersBundle = createAsyncBundleWithClear(loadUsersActionName, actionNamespace)<
   void,
   ILoadUsersSuccessPayload,
   IHttpRequestError,
   void,
   void
->(loadUsersActionName, actionNamespace);
+>();
 
-export const itemBundle = createBundleWithClear(setItemActionName, actionNamespace);
+export const itemBundle = createBundleWithClear(setItemActionName, actionNamespace)();
 ```
 
 reducers.ts

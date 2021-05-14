@@ -5,19 +5,8 @@ const actionNamespace = '[MAIN]';
 
 const loadUsersActionName = 'loadUsers' as const;
 
-export const loadUsersBundle = createAsyncBundleWithClear<
-  typeof loadUsersActionName, typeof actionNamespace,
-  void,
-  ILoadUsersSuccessPayload,
-  IHttpRequestError,
-  void,
-  void
->(loadUsersActionName, actionNamespace);
+export const loadUsersBundle = createAsyncBundleWithClear(loadUsersActionName, actionNamespace)<void, ILoadUsersSuccessPayload, IHttpRequestError>();
 
 const itemActionName = 'item' as const;
 
-export const itemBundle = createBundleWithClear<
-  typeof itemActionName,
-  typeof actionNamespace,
-  { item: string }
->(itemActionName, actionNamespace);
+export const itemBundle = createBundleWithClear(itemActionName, actionNamespace)<{ item: string }>();
