@@ -2,8 +2,6 @@
 
 **Easily Generate NGRX Action Bundles and Easily Connect the Dispatchers and Listeners to your Angular Injectables/Components/Directives/Pipes**
 
-**YOU CAN USE THIS WITH TYPESCRIPT 4.1 BUT IT'S STILL UNDER DEVELOPMENT**
-
 TODO:
 * Create connect service method type guards.
 * Allow connect service methods to work with the default ngrx/store action creator
