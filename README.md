@@ -4,7 +4,7 @@
 
 TODO:
 * Create connect service method type guards.
-* Allow connect service methods to work with the default ngrx/store action creator
+* Allow to connect service methods to work with the default ngrx/store action creator
 
 ## USAGE:
 `npm install ngrx-action-bundles` || `yarn add ngrx-action-bundles`
@@ -69,7 +69,7 @@ const itemActionName = 'item' as const;
  *    Returns: { 
  *      dispatch: { 
  *        [set<ActionName>]: (payload: ActionPayloadType) => void,
- *        [clera<ActionName>]: (payload: ClearActionPayloadType) => void
+ *        [clear<ActionName>]: (payload: ClearActionPayloadType) => void
  *      },
  *      listen: { 
  *        [set<ActionName>$]: Observable<{ type: <[namespace] set<ActionName>>, payload: ActionPayloadType }>,
@@ -287,8 +287,8 @@ export class SomeComponent implements OnInit, OnDestroy {
    * Here we use the <NGRX Action Bundles> `connect` service in order to connect
    * the bundles to a property called actions on our component.
    * 
-   * We also use `connectSelectors` to connect all the selectors to the selectors property so we can
-   * directly access the rxjs streams from the store.
+   * We also use `connectSelectors` to connect all the selectors to the selectors' property, so we can
+   * directly access the RxJS streams from the store.
    * */
 
   subscriptions = new Subscription();
