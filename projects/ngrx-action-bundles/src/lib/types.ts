@@ -33,3 +33,9 @@ export type Unpack<T> = T extends Array<infer I>
   : T extends Promise<infer P>
   ? P
   : T;
+
+export type ConnectedSelectorResult<T> = {
+  [K in keyof T & string as `${K}\$`]: T[K] extends (...args: any[]) => infer U ? Observable<U> : never
+}
+
+export type ConnectedBundlesResult<T> = UnionToIntersection<ElementOf<T>>;

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Actions } from '@ngrx/effects';
 import { deepAssign } from './utils';
 import { Observable } from 'rxjs';
+import { ConnectedBundlesResult, ConnectedSelectorResult } from './types';
 
 
 class EmptyActionBundle {
@@ -27,21 +28,16 @@ export class Connect<S = object, A = Action> {
     private actions$: Actions<A>
   ) { }
 
-  connectSelectors<T extends object>(selectors: T): {
-    [K in keyof T & string as `${K}\$`]: T[K] extends (...args: any[]) => infer U ? Observable<U> : never
-  } {
+  connectSelectors<T extends object>(selectors: T): ConnectedSelectorResult<T> {
     const entries = Object.entries(selectors);
     const connect: any = {};
     for (const [key, value] of entries) {
       connect[`${key}$`] = this.store.select(value);
     }
-    return connect as {
-      [K in keyof T & string as `${K}\$`]: T[K] extends (...args: any[]) => infer U ? Observable<U> : never
-    };
+    return connect as ConnectedSelectorResult<T>;
   }
 
-  // tslint:disable-next-line:typedef
-  connectBundles<T>(bundles: T[]) {
+  connectBundles<T>(bundles: T[]): ConnectedBundlesResult<T> {
 
     const $internal = {
       dispatch: this.store.dispatch.bind(this.store),
@@ -49,6 +45,6 @@ export class Connect<S = object, A = Action> {
     };
 
     const empty = new EmptyActionBundle($internal) as { dispatch: {}, listen: {}, creators: {} };
-    return deepAssign(empty, ...bundles);
+    return deepAssign(empty, ...bundles) as ConnectedBundlesResult<T>;
   }
 }
