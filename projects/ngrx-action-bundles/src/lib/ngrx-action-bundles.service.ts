@@ -16,7 +16,9 @@ class EmptyActionBundle {
   }
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class Connect<S = object, A = Action> {
 
 

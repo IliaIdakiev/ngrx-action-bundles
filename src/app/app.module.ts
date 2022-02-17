@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { StoreModule } from '@ngrx/store';
 import { HttpClientModule } from '@angular/common/http';
-import { NgrxActionBundlesModule } from 'ngrx-action-bundles';
 import { reducers } from './+store';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -25,8 +24,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     HttpClientModule,
     EffectsModule.forRoot([UserListEffects]),
     StoreModule.forRoot(reducers),
-    StoreDevtoolsModule.instrument(),
-    NgrxActionBundlesModule
+    StoreDevtoolsModule.instrument()
   ],
   providers: [],
   bootstrap: [AppComponent]
