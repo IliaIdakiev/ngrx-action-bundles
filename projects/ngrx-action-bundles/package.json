@@ -1,6 +1,6 @@
 {
   "name": "ngrx-action-bundles",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "peerDependencies": {
     "@angular/common": "^12.0.0",
     "@angular/core": "^12.0.0",
