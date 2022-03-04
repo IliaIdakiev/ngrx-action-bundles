@@ -24,7 +24,6 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     EffectsModule.forRoot([...]),
     StoreModule.forRoot(reducers),
     StoreDevtoolsModule.instrument(),
-    NgrxActionBundlesModule // <--- Add the NgrxActionBundlesModule in order to be able to use the connect service
   ],
   ...
 })
