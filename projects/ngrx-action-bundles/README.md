@@ -388,3 +388,7 @@ some.component.html
   <button (click)="actions.dispatch.clearItem()">Clear item in store</button>
 </div>
 ```
+
+### Unique Action Id - Timestamp
+
+If you need a unique way to distinguish the actions you can take a look into `createAsyncTimestampBundleWithClear` (check the demo app / loadUsers bundle). You will notice that we have something lile `1647882544485.2952` instead of `1647882544485`. The `.2952` is added so we can distinguish the actions dispatched in the same tick.

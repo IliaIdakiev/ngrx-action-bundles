@@ -14,6 +14,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   subscriptions = new Subscription();
 
+  loadTimestamp: number | undefined;
+
   actions = this.connect.connectBundles([
     loadUsersBundle,
     itemBundle
@@ -40,7 +42,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.actions.dispatch.loadUsers();
+    const action = this.actions.dispatch.loadUsers();
+    this.loadTimestamp = action.payload.timestamp;
 
     this.subscriptions.add(
       this.actions.listen.loadUsersSuccess$.subscribe(console.log)
@@ -55,7 +58,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 
   ngOnDestroy(): void {
-    if (this.isLoading) { this.actions.dispatch.loadUsersCancel(); }
+    if (this.isLoading) { this.actions.dispatch.loadUsersCancel({ timestamp: this.loadTimestamp as number }); }
     this.actions.dispatch.loadUsersClear();
     this.subscriptions.unsubscribe();
   }

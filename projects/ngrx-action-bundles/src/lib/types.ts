@@ -39,3 +39,15 @@ export type ConnectedSelectorResult<T> = {
 }
 
 export type ConnectedBundlesResult<T> = UnionToIntersection<ElementOf<T>>;
+
+export type ObjectWithTimestamp<T = number> = {
+  [key: string | number]: any;
+} & Timestamp<T>;
+
+export type PayloadWithTimestamp<T> = {
+  payload: ObjectWithTimestamp<T>
+};
+
+export type Timestamp<T = number> = {
+  timestamp: T;
+}

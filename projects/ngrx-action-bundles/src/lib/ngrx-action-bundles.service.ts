@@ -2,9 +2,7 @@ import { Store, Action } from '@ngrx/store';
 import { Injectable } from '@angular/core';
 import { Actions } from '@ngrx/effects';
 import { deepAssign } from './utils';
-import { Observable } from 'rxjs';
 import { ConnectedBundlesResult, ConnectedSelectorResult } from './types';
-
 
 class EmptyActionBundle {
   listen = {};

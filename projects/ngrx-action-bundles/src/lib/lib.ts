@@ -1,7 +1,8 @@
 import { ofType } from '@ngrx/effects';
 import { TypedAction } from '@ngrx/store/src/models';
 import { Observable } from 'rxjs';
-import { capitalize, createUniqueAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
+import { ObjectWithTimestamp, PayloadWithTimestamp } from './types';
+import { capitalize, createUniqueAction, createUniqueOptionalTimestampAction, createUniqueTimestampRequiredAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
 
 // tslint:disable-next-line:typedef
 function createAction<
@@ -28,6 +29,30 @@ function createAction<
 }
 
 // tslint:disable-next-line:typedef
+function createTimestampAction<
+  Name extends string,
+  Namespace extends string
+>(name: Name, namespace: Namespace) {
+  return function creator<Action = void>() {
+    const actionKey = makeActionKeyWithSuffix(name, '');
+    type ActionKeyType = typeof actionKey;
+
+    const actionType = makeNamespacedActionKey(namespace, actionKey);
+    type ActionTypeType = typeof actionType;
+
+    const actionCreator = createUniqueOptionalTimestampAction<ActionTypeType, Action>(actionType);
+
+    type ActionBundle = Record<ActionKeyType, typeof actionCreator>;
+
+    const result = {
+      [actionKey]: actionCreator
+    };
+
+    return result as ActionBundle;
+  }
+}
+
+// tslint:disable-next-line:typedef
 function createActionWithClear<
   Name extends string,
   Namespace extends string
@@ -40,19 +65,51 @@ function createActionWithClear<
     type ActionClearKeyType = typeof actionClearKey;
 
     const actionType = makeNamespacedActionKey(namespace, actionKey);
-    const actionTypeCancel = makeNamespacedActionKey(namespace, actionClearKey);
+    const actionTypeClear = makeNamespacedActionKey(namespace, actionClearKey);
 
     type ActionTypeType = typeof actionType;
-    type ActionCancelTypeType = typeof actionTypeCancel;
+    type ActionCancelTypeType = typeof actionTypeClear;
 
     const actionCreator = createUniqueAction<ActionTypeType, Action>(actionType);
-    const actionCancelCreator = createUniqueAction<ActionCancelTypeType, ActionClear>(actionTypeCancel);
+    const actionClearCreator = createUniqueAction<ActionCancelTypeType, ActionClear>(actionTypeClear);
 
-    type ActionBundle = Record<ActionKeyType, typeof actionCreator> & Record<ActionClearKeyType, typeof actionCancelCreator>;
+    type ActionBundle = Record<ActionKeyType, typeof actionCreator> & Record<ActionClearKeyType, typeof actionClearCreator>;
 
     const result = {
       [actionKey]: actionCreator,
-      [actionClearKey]: actionCancelCreator
+      [actionClearKey]: actionClearCreator
+    };
+
+    return result as ActionBundle;
+  }
+}
+
+// tslint:disable-next-line:typedef
+function createTimestampActionWithClear<
+  Name extends string,
+  Namespace extends string
+>(name: Name, namespace: Namespace) {
+  return function creator<Action, ActionClear>() {
+    const actionKey = makeActionKeyWithSuffix('set', capitalize(name));
+    const actionClearKey = makeActionKeyWithSuffix('clear', capitalize(name));
+
+    type ActionKeyType = typeof actionKey;
+    type ActionClearKeyType = typeof actionClearKey;
+
+    const actionType = makeNamespacedActionKey(namespace, actionKey);
+    const actionTypeClear = makeNamespacedActionKey(namespace, actionClearKey);
+
+    type ActionTypeType = typeof actionType;
+    type ActionClearTypeType = typeof actionTypeClear;
+
+    const actionCreator = createUniqueOptionalTimestampAction<ActionTypeType, Action>(actionType);
+    const actionClearCreator = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
+
+    type ActionBundle = Record<ActionKeyType, typeof actionCreator> & Record<ActionClearKeyType, typeof actionClearCreator>;
+
+    const result = {
+      [actionKey]: actionCreator,
+      [actionClearKey]: actionClearCreator
     };
 
     return result as ActionBundle;
@@ -108,6 +165,54 @@ function createAsyncActionBundle<
 }
 
 // tslint:disable-next-line:typedef
+function createAsyncTimestampActionBundle<
+  Name extends string,
+  Namespace extends string
+>(name: Name, ns: Namespace) {
+  return function creator<Action = void, ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp, ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp, ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp>() {
+    const actionKey = makeActionKeyWithSuffix(name, '');
+    const actionSuccessKey = makeActionKeyWithSuffix(name, 'Success');
+    const actionFailureKey = makeActionKeyWithSuffix(name, 'Failure');
+    const actionCancelKey = makeActionKeyWithSuffix(name, 'Cancel');
+
+    type ActionKeyType = typeof actionKey;
+    type ActionSuccessKeyType = typeof actionSuccessKey;
+    type ActionFailureKeyType = typeof actionFailureKey;
+    type ActionCancelKeyType = typeof actionCancelKey;
+
+    const actionType = makeNamespacedActionKey(ns, actionKey);
+    const actionTypeSuccess = makeNamespacedActionKey(ns, actionSuccessKey);
+    const actionTypeFailure = makeNamespacedActionKey(ns, actionFailureKey);
+    const actionTypeCancel = makeNamespacedActionKey(ns, actionCancelKey);
+
+    type ActionTypeType = typeof actionType;
+    type ActionSuccessTypeType = typeof actionTypeSuccess;
+    type ActionFailureTypeType = typeof actionTypeFailure;
+    type ActionCancelTypeType = typeof actionTypeCancel;
+
+    const actionCreator = createUniqueOptionalTimestampAction<ActionTypeType, Action>(actionType);
+    const actionSuccessCreator = createUniqueTimestampRequiredAction<ActionSuccessTypeType, ActionSuccess>(actionTypeSuccess);
+    const actionFailureCreator = createUniqueTimestampRequiredAction<ActionFailureTypeType, ActionFailure>(actionTypeFailure);
+    const actionCancelCreator = createUniqueTimestampRequiredAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
+
+    type ActionBundle =
+      Record<ActionKeyType, typeof actionCreator> &
+      Record<ActionSuccessKeyType, typeof actionSuccessCreator> &
+      Record<ActionFailureKeyType, typeof actionFailureCreator> &
+      Record<ActionCancelKeyType, typeof actionCancelCreator>;
+
+    const result = {
+      [actionKey]: actionCreator,
+      [actionSuccessKey]: actionSuccessCreator,
+      [actionFailureKey]: actionFailureCreator,
+      [actionCancelKey]: actionCancelCreator
+    };
+
+    return result as ActionBundle;
+  }
+}
+
+// tslint:disable-next-line:typedef
 function createAsyncActionBundleWithClear<
   Name extends string,
   Namespace extends string
@@ -128,7 +233,34 @@ function createAsyncActionBundleWithClear<
 
     const actionClearCreator = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
 
-    // type ActionClearMapType = MapKeyToCreator<{ t: typeof actionClearCreator }, ActionClearKeyType>;
+    (bundle as any)[actionClearKey] = actionClearCreator;
+
+    return bundle as typeof bundle & Record<ActionClearKeyType, typeof actionClearCreator>;
+  }
+
+}
+
+// tslint:disable-next-line:typedef
+function createAsyncTimestampActionBundleWithClear<
+  Name extends string,
+  Namespace extends string
+>(name: Name, ns: Namespace) {
+
+  return function creator<
+    Action = void,
+    ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionClear = void
+  >() {
+    const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
+    const actionClearKey = makeActionKeyWithSuffix(name, 'Clear');
+    const actionTypeClear = makeNamespacedActionKey(ns, actionClearKey);
+
+    type ActionClearKeyType = typeof actionClearKey;
+    type ActionClearTypeType = typeof actionTypeClear;
+
+    const actionClearCreator = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
 
     (bundle as any)[actionClearKey] = actionClearCreator;
 
@@ -149,6 +281,25 @@ export function createAsyncBundle<
     ActionCancel = void
   >() {
     const bundle = createAsyncActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
+    const listen = createActionStreamBundle(bundle);
+    const dispatch = createActionDispatchBundle(bundle);
+
+    return { listen, dispatch, creators: bundle };
+  }
+}
+
+// tslint:disable-next-line:typedef
+export function createAsyncTimestampBundle<
+  Name extends string,
+  Namespace extends string,
+  >(name: Name, ns: Namespace) {
+  return function creator<
+    Action = void,
+    ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp
+  >() {
+    const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
     const listen = createActionStreamBundle(bundle);
     const dispatch = createActionDispatchBundle(bundle);
 
@@ -179,6 +330,28 @@ export function createAsyncBundleWithClear<
   }
 }
 
+export function createAsyncTimestampBundleWithClear<
+  Name extends string,
+  Namespace extends string
+>(name: Name, ns: Namespace) {
+  return function creator<
+    Action,
+    ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp,
+    ActionClear = void
+  >() {
+    const bundle = createAsyncTimestampActionBundleWithClear<
+      Name,
+      Namespace
+    >(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel, ActionClear>();
+    const listen = createActionStreamBundle(bundle);
+    const dispatch = createActionDispatchBundle(bundle);
+
+    return { listen, dispatch, creators: bundle };
+  }
+}
+
 // tslint:disable-next-line:typedef
 export function createBundle<
   Name extends string,
@@ -196,12 +369,43 @@ export function createBundle<
 }
 
 // tslint:disable-next-line:typedef
+export function createTimestampBundle<
+  Name extends string,
+  Namespace extends string
+>(name: Name, namespace: Namespace) {
+
+  return function creator<Action = void>() {
+    const bundle = createTimestampAction<Name, Namespace>(name, namespace)<Action>();
+
+    const listen = createActionStreamBundle(bundle);
+    const dispatch = createActionDispatchBundle(bundle);
+
+    return { listen, dispatch, creators: bundle };
+  };
+}
+
+// tslint:disable-next-line:typedef
 export function createBundleWithClear<
   Name extends string,
   Namespace extends string
 >(name: Name, namespace: Namespace) {
   return function creator<Action = void, ActionClear = void>() {
     const bundle = createActionWithClear<Name, Namespace>(name, namespace)<Action, ActionClear>();
+
+    const listen = createActionStreamBundle(bundle);
+    const dispatch = createActionDispatchBundle(bundle);
+
+    return { listen, dispatch, creators: bundle };
+  };
+}
+
+// tslint:disable-next-line:typedef
+export function createTimestampBundleWithClear<
+  Name extends string,
+  Namespace extends string
+>(name: Name, namespace: Namespace) {
+  return function creator<Action = void, ActionClear = void>() {
+    const bundle = createTimestampActionWithClear<Name, Namespace>(name, namespace)<Action, ActionClear>();
 
     const listen = createActionStreamBundle(bundle);
     const dispatch = createActionDispatchBundle(bundle);
@@ -239,15 +443,19 @@ function createActionDispatchBundle<T>(this: any, bundle: T) {
     Object.defineProperty(result, key, {
       // tslint:disable-next-line:typedef
       get() {
-        return (payload: any) => this.$internal.dispatch(value(payload));
+        return (payload: any) => {
+          const action = value(payload);
+          this.$internal.dispatch(action);
+          return action;
+        };
       }
     });
   }
 
   return result as {
     [K in keyof T]:
-    T[K] extends (payload: infer P) => { payload: any } & TypedAction<any> ?
-    (payload: P) => void : T[K] extends (...args: infer F) => TypedAction<any> ? (...args: F) => void :
-    T[K] extends () => TypedAction<any> ? () => TypedAction<any> : never;
+    T[K] extends (payload: infer P) => infer R ?
+    (payload: P) => R : T[K] extends (...args: infer F) => infer R ? (...args: F) => R :
+    T[K] extends () => infer R ? () => R : never;
   };
 }
