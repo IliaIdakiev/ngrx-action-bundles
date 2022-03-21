@@ -17,7 +17,6 @@ app.module.ts
 
 ```typescript
 import { NgModule } from '@angular/core';
-import { NgrxActionBundlesModule } from 'ngrx-action-bundles';
 import { reducers } from './+store/reducers';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
