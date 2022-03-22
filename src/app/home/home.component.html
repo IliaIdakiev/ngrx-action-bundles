@@ -2,11 +2,13 @@
   <h1>User List</h1>
   <div *ngIf="isLoading">Loading...</div>
   <div *ngFor="let user of (users$ | async)">{{user.username}}</div>
-  <button (click)="actions.dispatch.loadUsers()">Reload Users</button>
+  <button (click)="reloadUsers(1)">Reload Users With No Timestamp</button>
+  <button (click)="reloadUsers(2)">Reload Users With Default Timestamp</button>
+  <button (click)="reloadUsers(3)">Reload Users With Custom Timestamp</button>
 </div>
 <div>
   <h1>Message Item is: {{item$ | async}}</h1>
   <input #inp type="text" value="">
-  <button (click)="actions.dispatch.setItem({ item: inp.value }); inp.value = ''">Set item in store</button>
-  <button (click)="actions.dispatch.clearItem()">Clear item in store</button>
+  <button (click)="setItem({ item: inp.value }); inp.value = ''">Set item in store</button>
+  <button (click)="clearItem()">Clear item in store</button>
 </div>

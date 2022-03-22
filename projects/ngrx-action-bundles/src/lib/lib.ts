@@ -169,7 +169,12 @@ function createAsyncTimestampActionBundle<
   Name extends string,
   Namespace extends string
 >(name: Name, ns: Namespace) {
-  return function creator<Action = void, ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp, ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp, ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp>() {
+  return function creator<
+    Action = void,
+    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any
+  >() {
     const actionKey = makeActionKeyWithSuffix(name, '');
     const actionSuccessKey = makeActionKeyWithSuffix(name, 'Success');
     const actionFailureKey = makeActionKeyWithSuffix(name, 'Failure');
@@ -191,9 +196,9 @@ function createAsyncTimestampActionBundle<
     type ActionCancelTypeType = typeof actionTypeCancel;
 
     const actionCreator = createUniqueOptionalTimestampAction<ActionTypeType, Action>(actionType);
-    const actionSuccessCreator = createUniqueTimestampRequiredAction<ActionSuccessTypeType, ActionSuccess>(actionTypeSuccess);
-    const actionFailureCreator = createUniqueTimestampRequiredAction<ActionFailureTypeType, ActionFailure>(actionTypeFailure);
-    const actionCancelCreator = createUniqueTimestampRequiredAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
+    const actionSuccessCreator = createUniqueTimestampRequiredAction<ActionSuccessTypeType, ActionSuccess, ActionSuccess['timestamp']>(actionTypeSuccess);
+    const actionFailureCreator = createUniqueTimestampRequiredAction<ActionFailureTypeType, ActionFailure, ActionFailure['timestamp']>(actionTypeFailure);
+    const actionCancelCreator = createUniqueTimestampRequiredAction<ActionCancelTypeType, ActionCancel, ActionCancel['timestamp']>(actionTypeCancel);
 
     type ActionBundle =
       Record<ActionKeyType, typeof actionCreator> &
@@ -248,11 +253,11 @@ function createAsyncTimestampActionBundleWithClear<
 
   return function creator<
     Action = void,
-    ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionClear = void
-  >() {
+    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionClear = void,
+    >() {
     const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
     const actionClearKey = makeActionKeyWithSuffix(name, 'Clear');
     const actionTypeClear = makeNamespacedActionKey(ns, actionClearKey);
@@ -295,10 +300,10 @@ export function createAsyncTimestampBundle<
   >(name: Name, ns: Namespace) {
   return function creator<
     Action = void,
-    ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp
-  >() {
+    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    >() {
     const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
     const listen = createActionStreamBundle(bundle);
     const dispatch = createActionDispatchBundle(bundle);
@@ -335,11 +340,12 @@ export function createAsyncTimestampBundleWithClear<
   Namespace extends string
 >(name: Name, ns: Namespace) {
   return function creator<
-    Action,
-    ActionSuccess extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionFailure extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionCancel extends ObjectWithTimestamp = ObjectWithTimestamp,
-    ActionClear = void
+    Action = void,
+    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionClear = void,
+    TT = number
   >() {
     const bundle = createAsyncTimestampActionBundleWithClear<
       Name,

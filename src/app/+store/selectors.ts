@@ -13,3 +13,8 @@ export const selectMainItem = createSelector(
   selectMain,
   (state: IMainState) => state.item
 );
+
+export const selectors = {
+  userList: selectMainUserList,
+  item: selectMainItem
+};
