@@ -1,7 +1,7 @@
 import { ofType } from '@ngrx/effects';
 import { TypedAction } from '@ngrx/store/src/models';
 import { Observable } from 'rxjs';
-import { ObjectWithTimestamp, PayloadWithTimestamp } from './types';
+import { ObjectWithTimestamp, Timestamp } from './types';
 import { capitalize, createUniqueAction, createUniqueOptionalTimestampAction, createUniqueTimestampRequiredAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
 
 // tslint:disable-next-line:typedef
@@ -253,9 +253,9 @@ function createAsyncTimestampActionBundleWithClear<
 
   return function creator<
     Action = void,
-    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
-    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
-    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
+    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
+    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
+    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
     ActionClear = void,
     >() {
     const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
@@ -305,8 +305,8 @@ export function createAsyncTimestampBundle<
     ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
     >() {
     const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
-    const listen = createActionStreamBundle(bundle);
-    const dispatch = createActionDispatchBundle(bundle);
+    const listen = createActionStreamBundleWithTimestamp<typeof bundle, ActionSuccess['timestamp']>(bundle);
+    const dispatch = createActionDispatchBundleWithTimestamp<typeof bundle, ActionSuccess['timestamp']>(bundle);
 
     return { listen, dispatch, creators: bundle };
   }
@@ -344,15 +344,14 @@ export function createAsyncTimestampBundleWithClear<
     ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
     ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
     ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = any,
-    ActionClear = void,
-    TT = number
+    ActionClear = void
   >() {
     const bundle = createAsyncTimestampActionBundleWithClear<
       Name,
       Namespace
     >(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel, ActionClear>();
-    const listen = createActionStreamBundle(bundle);
-    const dispatch = createActionDispatchBundle(bundle);
+    const listen = createActionStreamBundleWithTimestamp<typeof bundle, ActionSuccess['timestamp']>(bundle);
+    const dispatch = createActionDispatchBundleWithTimestamp(bundle);
 
     return { listen, dispatch, creators: bundle };
   }
@@ -441,6 +440,26 @@ function createActionStreamBundle<T>(this: any, bundle: T) {
 }
 
 // tslint:disable-next-line:typedef
+function createActionStreamBundleWithTimestamp<T, TT>(this: any, bundle: T) {
+  const bundleEntries = Object.entries(bundle);
+  const result = {} as any;
+  for (const [key, value] of bundleEntries) {
+    Object.defineProperty(result, `${key}\$`, {
+      // tslint:disable-next-line:typedef
+      get() {
+        return this.$internal.actions$.pipe(ofType(value.type));
+      },
+      enumerable: true
+    });
+  }
+
+  return result as {
+    [K in keyof T & string as `${K}\$`]:
+    Observable<T[K] extends (...args: any) => any ? { timestamp: Timestamp<TT> } & ReturnType<T[K]> : never>
+  };
+}
+
+// tslint:disable-next-line:typedef
 function createActionDispatchBundle<T>(this: any, bundle: T) {
 
   const result = {} as any;
@@ -462,6 +481,30 @@ function createActionDispatchBundle<T>(this: any, bundle: T) {
     [K in keyof T]:
     T[K] extends (payload: infer P) => infer R ?
     (payload: P) => R : T[K] extends (...args: infer F) => infer R ? (...args: F) => R :
+    T[K] extends () => infer R ? () => R : never;
+  };
+}
+
+function createActionDispatchBundleWithTimestamp<T, TT>(this: any, bundle: T) {
+  const result = {} as any;
+  const bundleEntries = Object.entries(bundle);
+  for (const [key, value] of bundleEntries) {
+    Object.defineProperty(result, key, {
+      // tslint:disable-next-line:typedef
+      get() {
+        return (payload: any) => {
+          const action = value(payload);
+          this.$internal.dispatch(action);
+          return action;
+        };
+      }
+    });
+  }
+
+  return result as {
+    [K in keyof T]:
+    T[K] extends (payload: infer P) => infer R ?
+    (payload: P & { timestamp: TT }) => R : T[K] extends (...args: infer F) => infer R ? (...args: F) => R :
     T[K] extends () => infer R ? () => R : never;
   };
 }

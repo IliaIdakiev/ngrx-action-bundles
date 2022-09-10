@@ -8,9 +8,6 @@
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
-        },
-        "@schematics/angular:application": {
-          "strict": true
         }
       },
       "root": "",
@@ -70,11 +67,6 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-          "sourceMap": {
-            "vendor": true,
-            "scripts": true,
-            "styles": true
-          },
           "configurations": {
             "production": {
               "browserTarget": "ngrx-action-bundles-app:build:production"
@@ -142,6 +134,5 @@
         }
       }
     }
-  },
-  "defaultProject": "ngrx-action-bundles-app"
+  }
 }

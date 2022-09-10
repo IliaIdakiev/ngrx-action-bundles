@@ -20,6 +20,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   users$ = this.model.selectors.userList$;
   item$ = this.model.selectors.item$;
 
+  dispatchedActions: { type: 1 | 2 | 3; action: any }[] = [];
+
   constructor(private model: Model) {
     this.subscriptions.add(
       combineLatest([
@@ -68,19 +70,41 @@ export class HomeComponent implements OnInit, OnDestroy {
   reloadUsers(type: 1 | 2 | 3): void {
     if (type === 1) {
       const action = this.model.actions.dispatch.loadUsersWithNoTimestamp();
+      this.dispatchedActions.push({ type, action })
       console.log('loadUsersWithNoTimestamp action is:', action);
       return;
     }
     if (type === 2) {
       const action = this.model.actions.dispatch.loadUsersWithDefaultTimestamp();
+      this.dispatchedActions.push({ type, action })
       console.log('loadUsersWithDefaultTimestamp action is:', action);
       return;
     }
     if (type === 3) {
       const action = this.model.actions.dispatch.loadUsersWithCustomTimestamp({ timestamp: Math.random().toString() });
+      this.dispatchedActions.push({ type, action })
       console.log('loadUsersWithCustomTimestamp action is:', action);
       return;
     }
+  }
+
+  cancelActions(): void {
+    this.dispatchedActions.forEach(({ type, action }) => {
+      if (type === 1) {
+        this.model.actions.dispatch.loadUsersWithNoTimestampCancel();
+        return;
+      }
+      if (type === 2) {
+        const payload = { timestamp: action.payload.timestap };
+        this.model.actions.dispatch.loadUsersWithDefaultTimestampCancel();
+        return;
+      }
+      if (type === 3) {
+        const payload = { timestamp: action.payload.timestap };
+        this.model.actions.dispatch.loadUsersWithCustomTimestampCancel();
+        return;
+      }
+    });
   }
 
   ngOnDestroy(): void {
