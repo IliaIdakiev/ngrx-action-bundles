@@ -1,7 +1,7 @@
 import { createAction } from '@ngrx/store';
-import { createTimestamp } from 'ngrx-action-bundles';
 import { ObjectWithTimestamp } from '../types';
 import { actionType } from './action-type';
+import { createTimestamp } from './create-timestamp';
 
 export const createUniqueAction = <T extends string, P>(type: T) => createAction(
   actionType<T>(type),

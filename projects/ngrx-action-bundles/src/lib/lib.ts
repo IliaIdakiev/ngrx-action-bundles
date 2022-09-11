@@ -1,7 +1,14 @@
 import { ofType } from '@ngrx/effects';
 import { Observable } from 'rxjs';
 import { ObjectWithTimestamp, Timestamp } from './types';
-import { capitalize, createUniqueAction, createUniqueTimestampAction, makeActionKeyWithSuffix, makeNamespacedActionKey } from './utils';
+import {
+  capitalize,
+  createUniqueAction,
+  createUniqueRequiredTimestampAction,
+  createUniqueTimestampAction,
+  makeActionKeyWithSuffix,
+  makeNamespacedActionKey
+} from './utils';
 
 // tslint:disable-next-line:typedef
 function createAction<
@@ -163,47 +170,55 @@ function createAsyncActionBundle<
   }
 }
 
-// tslint:disable-next-line:typedef
 function createAsyncTimestampActionBundle<
   Name extends string,
   Namespace extends string
->(name: Name, ns: Namespace) {
-  return function creator<
-    Action extends Partial<ObjectWithTimestamp> = { timestamp?: number },
-    ActionSuccess extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: Action['timestamp'] },
-    ActionFailure extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: Action['timestamp'] },
-    ActionCancel extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: Action['timestamp'] }
-  >() {
+>(name: Name, ns: Namespace): <
+  Action extends Partial<ObjectWithTimestamp<any>> = { timestamp?: number },
+  ActionSuccess extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: number },
+  ActionFailure extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: number },
+  ActionCancel extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: number },
+>() =>
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, ''>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Action & { timestamp: U }>> :
+      ReturnType<typeof createUniqueTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Action & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Success'>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Omit<ActionSuccess, 'timestamp'> & { timestamp: U }>> :
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionSuccess & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Failure'>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Omit<ActionFailure, 'timestamp'> & { timestamp: U }>> :
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionFailure & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Cancel'>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Omit<ActionCancel, 'timestamp'> & { timestamp: U }>> :
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionCancel & { timestamp: Action['timestamp'] }>>
+    >;
+function createAsyncTimestampActionBundle(name: string, ns: string) {
+  return function creator() {
     const actionKey = makeActionKeyWithSuffix(name, '');
     const actionSuccessKey = makeActionKeyWithSuffix(name, 'Success');
     const actionFailureKey = makeActionKeyWithSuffix(name, 'Failure');
     const actionCancelKey = makeActionKeyWithSuffix(name, 'Cancel');
-
-    type ActionKeyType = typeof actionKey;
-    type ActionSuccessKeyType = typeof actionSuccessKey;
-    type ActionFailureKeyType = typeof actionFailureKey;
-    type ActionCancelKeyType = typeof actionCancelKey;
 
     const actionType = makeNamespacedActionKey(ns, actionKey);
     const actionTypeSuccess = makeNamespacedActionKey(ns, actionSuccessKey);
     const actionTypeFailure = makeNamespacedActionKey(ns, actionFailureKey);
     const actionTypeCancel = makeNamespacedActionKey(ns, actionCancelKey);
 
-    type ActionTypeType = typeof actionType;
-    type ActionSuccessTypeType = typeof actionTypeSuccess;
-    type ActionFailureTypeType = typeof actionTypeFailure;
-    type ActionCancelTypeType = typeof actionTypeCancel;
-
-    const actionCreator = createUniqueTimestampAction<ActionTypeType, Action>(actionType);
-    const actionSuccessCreator = createUniqueTimestampAction<ActionSuccessTypeType, ActionSuccess>(actionTypeSuccess);
-    const actionFailureCreator = createUniqueTimestampAction<ActionFailureTypeType, ActionFailure>(actionTypeFailure);
-    const actionCancelCreator = createUniqueTimestampAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
-
-    type ActionBundle =
-      Record<ActionKeyType, typeof actionCreator> &
-      Record<ActionSuccessKeyType, typeof actionSuccessCreator> &
-      Record<ActionFailureKeyType, typeof actionFailureCreator> &
-      Record<ActionCancelKeyType, typeof actionCancelCreator>;
+    const actionCreator = createUniqueTimestampAction(actionType);
+    const actionSuccessCreator = createUniqueRequiredTimestampAction(actionTypeSuccess);
+    const actionFailureCreator = createUniqueRequiredTimestampAction(actionTypeFailure);
+    const actionCancelCreator = createUniqueRequiredTimestampAction(actionTypeCancel);
 
     const result = {
       [actionKey]: actionCreator,
@@ -212,13 +227,177 @@ function createAsyncTimestampActionBundle<
       [actionCancelKey]: actionCancelCreator
     };
 
-    return result as ActionBundle;
+    return result as any;
   }
 }
+// TODO: REMOVE THIS:
+// function createAsyncTimestampActionBundle<
+//   Name extends string,
+//   Namespace extends string
+// >(name: Name, ns: Namespace) {
+//   return function creator<
+//     Action,
+//     ActionSuccess,
+//     ActionFailure,
+//     ActionCancel,
+//   >() {
+//     const actionKey = makeActionKeyWithSuffix(name, '');
+//     const actionSuccessKey = makeActionKeyWithSuffix(name, 'Success');
+//     const actionFailureKey = makeActionKeyWithSuffix(name, 'Failure');
+//     const actionCancelKey = makeActionKeyWithSuffix(name, 'Cancel');
 
-var a = createAsyncTimestampActionBundle('loadUsers', '[UserModule]')<{ hello: string }>();
-a.loadUsers({ hello: '231' });
-a.loadUsersCancel();
+//     type ActionKeyType = typeof actionKey;
+//     type ActionSuccessKeyType = typeof actionSuccessKey;
+//     type ActionFailureKeyType = typeof actionFailureKey;
+//     type ActionCancelKeyType = typeof actionCancelKey;
+
+//     const actionType = makeNamespacedActionKey(ns, actionKey);
+//     const actionTypeSuccess = makeNamespacedActionKey(ns, actionSuccessKey);
+//     const actionTypeFailure = makeNamespacedActionKey(ns, actionFailureKey);
+//     const actionTypeCancel = makeNamespacedActionKey(ns, actionCancelKey);
+
+//     type ActionTypeType = typeof actionType;
+//     type ActionSuccessTypeType = typeof actionTypeSuccess;
+//     type ActionFailureTypeType = typeof actionTypeFailure;
+//     type ActionCancelTypeType = typeof actionTypeCancel;
+
+//     const actionCreator = createUniqueTimestampAction<ActionTypeType, Action>(actionType);
+//     const actionSuccessCreator = createUniqueRequiredTimestampAction<ActionSuccessTypeType, ActionSuccess & { timestamp: Action['timestamp'] }>(actionTypeSuccess);
+//     const actionFailureCreator = createUniqueRequiredTimestampAction<ActionFailureTypeType, ActionFailure>(actionTypeFailure);
+//     const actionCancelCreator = createUniqueRequiredTimestampAction<ActionCancelTypeType, ActionCancel>(actionTypeCancel);
+
+//     type ActionBundle =
+//       Record<ActionKeyType, typeof actionCreator> &
+//       Record<ActionSuccessKeyType, typeof actionSuccessCreator> &
+//       Record<ActionFailureKeyType, typeof actionFailureCreator> &
+//       Record<ActionCancelKeyType, typeof actionCancelCreator>;
+
+//     const result = {
+//       [actionKey]: actionCreator,
+//       [actionSuccessKey]: actionSuccessCreator,
+//       [actionFailureKey]: actionFailureCreator,
+//       [actionCancelKey]: actionCancelCreator
+//     };
+
+//     return result as ActionBundle;
+//   }
+// }
+
+// // TEST - no generics
+// var a = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')();
+// a.hello()
+// a.hello({ timestamp: 123 });
+// a.hello({ timestamp: '3213' }); // error
+
+// a.helloSuccess({ timestamp: 213 });
+// a.helloSuccess({ timestamp: '123' }); // error
+// a.helloSuccess({}); /// error
+// a.helloSuccess(); /// error
+
+// a.helloFailure({ timestamp: 213 });
+// a.helloFailure({ timestamp: '123' }); // error
+// a.helloFailure({}); /// error
+// a.helloFailure(); /// error
+
+// a.helloCancel({ timestamp: 213 });
+// a.helloCancel({ timestamp: '123' }); // error
+// a.helloCancel({}); /// error
+// a.helloCancel(); /// error
+
+// // TEST - custom timestamp
+// var a1 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number }
+// >();
+// a1.hello({ timestamp: true, test: 123 });
+// a1.hello({}); //error
+// a1.hello(); //error
+// a1.hello({ timestamp: 13 }); //error
+// a1.hello({ timestamp: 13, test: '321' }); //error
+
+// a1.helloSuccess({ timestamp: true });
+// a1.helloSuccess({ timestamp: true, test: 123 }); //error
+// a1.helloSuccess({ timestamp: 123 }) // error
+// a1.helloSuccess({}) // error
+// a1.helloSuccess() // error
+
+// a1.helloFailure({ timestamp: true });
+// a1.helloFailure({ timestamp: 123 }) // error
+// a1.helloFailure({}) // error
+// a1.helloFailure() // error
+
+// a1.helloCancel({ timestamp: true });
+// a1.helloCancel({ timestamp: 123 }) // error
+// a1.helloCancel({}) // error
+// a1.helloCancel() // error
+
+
+// // TEST - custom timestamp 2
+// var a22 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: number, users: { name: string }[] }
+// >(); // error
+// var a222 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string }[] },
+//   { timestamp: string, test: boolean }
+// >(); // error
+// var a2222 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string }[] },
+//   { timestamp: boolean, test: boolean },
+//   { timestamp: string, test: boolean }
+// >(); // error
+
+// var a2 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] }
+// >(); // error
+
+// a2.hello({ timestamp: true, test: 123 });
+// a2.hello({}); //error
+// a2.hello(); //error
+// a2.hello({ timestamp: 13 }); //error
+// a2.hello({ timestamp: 13, test: '321' }); //error
+
+// a2.helloSuccess({ timestamp: true, users: [{ name: '213', age: 20 }] });
+// a2.helloSuccess({ timestamp: true, test: 123 }); //error
+// a2.helloSuccess({ timestamp: 123 }) // error
+// a2.helloSuccess({}) // error
+// a2.helloSuccess() // error
+
+// a2.helloFailure({ timestamp: true });
+// a2.helloFailure({ timestamp: 123 }) // error
+// a2.helloFailure({}) // error
+// a2.helloFailure() // error
+
+// a2.helloCancel({ timestamp: true });
+// a2.helloCancel({ timestamp: 123 }) // error
+// a2.helloCancel({}) // error
+// a2.helloCancel() // error
+
+// var a3 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] },
+//   { timestamp: boolean, validate: boolean }
+// >();
+
+// a3.helloFailure({ validate: true, timestamp: true });
+// a3.helloFailure(); // error
+// a3.helloFailure({}); // error
+// a3.helloFailure({ validate: true }); // error
+
+// var a4 = createAsyncTimestampActionBundle<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] },
+//   { timestamp: boolean, validate: boolean },
+//   { timestamp: boolean, age: number }
+// >();
+
+// a4.helloCancel({ timestamp: true, age: 30 });
+// a4.helloCancel(); // error
+// a4.helloCancel({}); // error
+// a4.helloCancel({ age: 20 }); // error
+
 
 // tslint:disable-next-line:typedef
 function createAsyncActionBundleWithClear<
@@ -248,34 +427,224 @@ function createAsyncActionBundleWithClear<
 
 }
 
-// tslint:disable-next-line:typedef
 function createAsyncTimestampActionBundleWithClear<
   Name extends string,
   Namespace extends string
->(name: Name, ns: Namespace) {
-
-  return function creator<
-    Action = void,
-    ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
-    ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
-    ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
-    ActionClear = void,
-  >() {
-    const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
+>(name: Name, ns: Namespace): <
+  Action extends Partial<ObjectWithTimestamp<any>> = { timestamp?: number },
+  ActionSuccess extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: number },
+  ActionFailure extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: number },
+  ActionCancel extends ObjectWithTimestamp<Action['timestamp']> = { timestamp: number },
+  ActionClear extends any = void,
+>() =>
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, ''>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Action & { timestamp: U }>> :
+      ReturnType<typeof createUniqueTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Action & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Success'>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Omit<ActionSuccess, 'timestamp'> & { timestamp: U }>> :
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionSuccess & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Failure'>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Omit<ActionFailure, 'timestamp'> & { timestamp: U }>> :
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionFailure & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Cancel'>>,
+      Action extends { timestamp: infer U } ?
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, Omit<ActionCancel, 'timestamp'> & { timestamp: U }>> :
+      ReturnType<typeof createUniqueRequiredTimestampAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionCancel & { timestamp: Action['timestamp'] }>>
+    > &
+    Record<
+      ReturnType<typeof makeActionKeyWithSuffix<Name, 'Clear'>>,
+      ActionClear extends void ? ReturnType<typeof createUniqueAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, void>> :
+      ReturnType<typeof createUniqueAction<ReturnType<typeof makeNamespacedActionKey<Namespace, Name>>, ActionClear>>
+    >;
+function createAsyncTimestampActionBundleWithClear(name: string, ns: string) {
+  return function creator() {
+    const bundle = createAsyncTimestampActionBundle(name, ns)();
     const actionClearKey = makeActionKeyWithSuffix(name, 'Clear');
     const actionTypeClear = makeNamespacedActionKey(ns, actionClearKey);
 
-    type ActionClearKeyType = typeof actionClearKey;
-    type ActionClearTypeType = typeof actionTypeClear;
-
-    const actionClearCreator = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
-
+    const actionClearCreator = createUniqueAction(actionTypeClear);
     (bundle as any)[actionClearKey] = actionClearCreator;
-
-    return bundle as typeof bundle & Record<ActionClearKeyType, typeof actionClearCreator>;
+    return bundle as any;
   }
-
 }
+// // TEST - no generics
+// var a = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')();
+// a.hello()
+// a.hello({ timestamp: 123 });
+// a.hello({ timestamp: '3213' }); // error
+
+// a.helloSuccess({ timestamp: 213 });
+// a.helloSuccess({ timestamp: '123' }); // error
+// a.helloSuccess({}); /// error
+// a.helloSuccess(); /// error
+
+// a.helloFailure({ timestamp: 213 });
+// a.helloFailure({ timestamp: '123' }); // error
+// a.helloFailure({}); /// error
+// a.helloFailure(); /// error
+
+// a.helloCancel({ timestamp: 213 });
+// a.helloCancel({ timestamp: '123' }); // error
+// a.helloCancel({}); /// error
+// a.helloCancel(); /// error
+
+// // TEST - custom timestamp
+// var a1 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number }
+// >();
+// a1.hello({ timestamp: true, test: 123 });
+// a1.hello({}); //error
+// a1.hello(); //error
+// a1.hello({ timestamp: 13 }); //error
+// a1.hello({ timestamp: 13, test: '321' }); //error
+
+// a1.helloSuccess({ timestamp: true });
+// a1.helloSuccess({ timestamp: true, test: 123 }); //error
+// a1.helloSuccess({ timestamp: 123 }) // error
+// a1.helloSuccess({}) // error
+// a1.helloSuccess() // error
+
+// a1.helloFailure({ timestamp: true });
+// a1.helloFailure({ timestamp: 123 }) // error
+// a1.helloFailure({}) // error
+// a1.helloFailure() // error
+
+// a1.helloCancel({ timestamp: true });
+// a1.helloCancel({ timestamp: 123 }) // error
+// a1.helloCancel({}) // error
+// a1.helloCancel() // error
+
+
+// // TEST - custom timestamp 2
+// var a22 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: number, users: { name: string }[] }
+// >(); // error
+// var a222 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string }[] },
+//   { timestamp: string, test: boolean }
+// >(); // error
+// var a2222 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string }[] },
+//   { timestamp: boolean, test: boolean },
+//   { timestamp: string, test: boolean }
+// >(); // error
+
+// var a2 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] }
+// >(); // error
+
+// a2.hello({ timestamp: true, test: 123 });
+// a2.hello({}); //error
+// a2.hello(); //error
+// a2.hello({ timestamp: 13 }); //error
+// a2.hello({ timestamp: 13, test: '321' }); //error
+
+// a2.helloSuccess({ timestamp: true, users: [{ name: '213', age: 20 }] });
+// a2.helloSuccess({ timestamp: true, test: 123 }); //error
+// a2.helloSuccess({ timestamp: 123 }) // error
+// a2.helloSuccess({}) // error
+// a2.helloSuccess() // error
+
+// a2.helloFailure({ timestamp: true });
+// a2.helloFailure({ timestamp: 123 }) // error
+// a2.helloFailure({}) // error
+// a2.helloFailure() // error
+
+// a2.helloCancel({ timestamp: true });
+// a2.helloCancel({ timestamp: 123 }) // error
+// a2.helloCancel({}) // error
+// a2.helloCancel() // error
+
+// var a3 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] },
+//   { timestamp: boolean, validate: boolean }
+// >();
+
+// a3.helloFailure({ validate: true, timestamp: true });
+// a3.helloFailure(); // error
+// a3.helloFailure({}); // error
+// a3.helloFailure({ validate: true }); // error
+
+// var a4 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] },
+//   { timestamp: boolean, validate: boolean },
+//   { timestamp: boolean, age: number }
+// >();
+
+// a4.helloCancel({ timestamp: true, age: 30 });
+// a4.helloCancel(); // error
+// a4.helloCancel({}); // error
+// a4.helloCancel({ age: 20 }); // error
+
+// var a3 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] },
+//   { timestamp: boolean, validate: boolean }
+// >();
+
+// a3.helloFailure({ validate: true, timestamp: true });
+// a3.helloFailure(); // error
+// a3.helloFailure({}); // error
+// a3.helloFailure({ validate: true }); // error
+
+// var a5 = createAsyncTimestampActionBundleWithClear<'hello', 'test'>('hello', 'test')<
+//   { timestamp: boolean, test: number },
+//   { timestamp: boolean, users: { name: string, age: number }[] },
+//   { timestamp: boolean, validate: boolean },
+//   { timestamp: boolean, age: number },
+//   { testingThisShit: { test: number } }
+// >();
+
+// a5.helloClear({ testingThisShit: { test: 13 } });
+// a5.helloClear({ testingThisShit: { test: '13' } }); // error
+// a5.helloClear({ timestamp: true, age: 30 }); // error
+// a5.helloClear(); // error
+// a5.helloClear({}); // error
+
+// TODO: REMOVE THIS
+// function createAsyncTimestampActionBundleWithClear<
+//   Name extends string,
+//   Namespace extends string
+// >(name: Name, ns: Namespace) {
+
+//   return function creator<
+//     Action = void,
+//     ActionSuccess extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
+//     ActionFailure extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
+//     ActionCancel extends Action extends ObjectWithTimestamp<infer TT> ? ObjectWithTimestamp<TT> : ObjectWithTimestamp<number> = { timestamp: number } & any,
+//     ActionClear = void,
+//   >() {
+//     const bundle = createAsyncTimestampActionBundle<Name, Namespace>(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel>();
+//     const actionClearKey = makeActionKeyWithSuffix(name, 'Clear');
+//     const actionTypeClear = makeNamespacedActionKey(ns, actionClearKey);
+
+//     type ActionClearKeyType = typeof actionClearKey;
+//     type ActionClearTypeType = typeof actionTypeClear;
+
+//     const actionClearCreator = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
+
+//     (bundle as any)[actionClearKey] = actionClearCreator;
+
+//     return bundle as typeof bundle & Record<ActionClearKeyType, typeof actionClearCreator>;
+//   }
+
+// }
 
 // tslint:disable-next-line:typedef
 export function createAsyncBundle<
