@@ -8,6 +8,27 @@ export const createUniqueAction = <T extends string, P>(type: T) => createAction
   (payload: P) => ({ payload })
 );
 
+export const createUniqueRequiredTimestampAction = <
+  T extends string, P extends ObjectWithTimestamp<any> = { timestamp: number }
+>(type: T) => createAction(
+  actionType<T>(type),
+  (payload: P) =>
+    ({ payload })
+);
+
+// TESTS
+// const name = 'loadUsers[UserModule]';
+// 1 NO ERROR:
+// const a00 = createUniqueRequiredTimestampAction<typeof name>(name)({ timestamp: 123 }) // ok
+// const a01 = createUniqueRequiredTimestampAction<typeof name>(name)() // error - reqired timestamp
+// const a02 = createUniqueRequiredTimestampAction<typeof name>(name)({}) // error - reqired timestamp
+
+// const a03 = createUniqueRequiredTimestampAction<typeof name, { timestamp: string }>(name)({ timestamp: 'dsada' }) // timestamp string
+// const a04 = createUniqueRequiredTimestampAction<typeof name, { timestamp: string }>(name)({}) // error timestamp string
+// const a05 = createUniqueRequiredTimestampAction<typeof name, { timestamp: string }>(name)() // error timestamp string
+
+// const a06 = createUniqueRequiredTimestampAction<typeof name, { timestamp?: string }>(name)({ timestamp: 'dsad' }) // error optional timestamp string
+
 export const createUniqueTimestampAction = <
   T extends string, P extends Partial<ObjectWithTimestamp<any>> = { timestamp: number }
 >(type: T) => createAction(
