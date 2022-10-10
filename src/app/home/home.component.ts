@@ -63,7 +63,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   clearItem() {
-    this.model.actions.dispatch.itemClear();
+    this.model.actions.dispatch.clearItem();
   }
 
   reloadUsers(type: 1 | 2 | 3 | 4): void {
@@ -75,21 +75,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     if (type === 2) {
       const action = this.model.actions.dispatch.loadUsersWithDefaultTimestamp();
-      action.payload.timestamp // not ok
       this.dispatchedActions.push({ type, action })
       console.log('loadUsersWithNoTimestamp action is:', action);
       return;
     }
     if (type === 3) {
       const action = this.model.actions.dispatch.loadUsersWithDefaultTimestamp({ timestamp: 213 });
-      action.payload.timestamp // not ok
       this.dispatchedActions.push({ type, action })
       console.log('loadUsersWithDefaultTimestamp action is:', action);
       return;
     }
     if (type === 4) {
       const action = this.model.actions.dispatch.loadUsersWithCustomTimestamp({ timestamp: Math.random().toString() });
-      action.payload.timestamp // not ok
+      const aaa = this.model.actions.dispatch.loadUsersWithCustomTimestampSuccess({ users: [], timestamp: '123' });
       this.dispatchedActions.push({ type, action })
       console.log('loadUsersWithCustomTimestamp action is:', action);
       return;

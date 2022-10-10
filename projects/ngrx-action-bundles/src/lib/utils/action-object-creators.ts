@@ -5,7 +5,8 @@ import {
   BundleWithTimestampAndClearType, BundleWithTimestampType
 } from "./bundles-types";
 import { capitalize } from "./capitalize";
-import { createUniqueAction, createUniqueRequiredTimestampAction, createUniqueTimestampAction } from "./create-unique-action";
+import { createTimestamp } from "./create-timestamp";
+import { createUniqueAction, createUniqueRequiredTimestampAction } from "./create-unique-action";
 import { makeActionKeyWithSuffix, makeNamespacedActionKey } from "./key-creators";
 
 // Create a single ngrx action object that will be used inside connect
@@ -44,10 +45,17 @@ export function createTimestampActionObject<
     const actionType = makeNamespacedActionKey(namespace, actionKey);
     type ActionTypeType = typeof actionType;
 
-    const actionCreator = createUniqueTimestampAction<ActionTypeType, Action>(actionType);
+    const actionCreator = createUniqueRequiredTimestampAction<ActionTypeType, Action extends { timestamp: any } ? Action : Action & { timestamp: number }>(actionType);
+    const helper = (payload: any) => {
+      if (!payload) { payload = {}; }
+      if (!payload.timestamp) { payload.timestamp = createTimestamp(); }
+      return actionCreator(payload);
+    }
+    (helper as any).type = actionType;
+
 
     const result = {
-      [actionKey]: actionCreator
+      [actionKey]: helper
     };
 
     return result as any;
@@ -99,11 +107,17 @@ export function createActionWithTimestampAndClearObject<
     type ActionTypeType = typeof actionType;
     type ActionCancelTypeType = typeof actionTypeClear;
 
-    const actionCreator = createUniqueTimestampAction<ActionTypeType, Action>(actionType);
+    const actionCreator = createUniqueRequiredTimestampAction<ActionTypeType, Action extends { timestamp: any } ? Action : Action & { timestamp: number }>(actionType);
+    const helper = (payload: any) => {
+      if (!payload) { payload = {}; }
+      if (!payload.timestamp) { payload.timestamp = createTimestamp(); }
+      return actionCreator(payload);
+    }
+    (helper as any).type = actionType;
     const actionClearCreator = createUniqueAction<ActionCancelTypeType, ActionClear>(actionTypeClear);
 
     const result = {
-      [actionKey]: actionCreator,
+      [actionKey]: helper,
       [actionClearKey]: actionClearCreator
     };
 
@@ -175,13 +189,19 @@ export function createAsyncTimestampActionObject<
     const actionTypeFailure = makeNamespacedActionKey(ns, actionFailureKey);
     const actionTypeCancel = makeNamespacedActionKey(ns, actionCancelKey);
 
-    const actionCreator = createUniqueTimestampAction(actionType);
+    const actionCreator = createUniqueRequiredTimestampAction<typeof actionType, Action extends { timestamp: any } ? Action : Action & { timestamp: number }>(actionType);
+    const helper = (payload: any) => {
+      if (!payload) { payload = {}; }
+      if (!payload.timestamp) { payload.timestamp = createTimestamp(); }
+      return actionCreator(payload);
+    }
+    (helper as any).type = actionType;
     const actionSuccessCreator = createUniqueRequiredTimestampAction(actionTypeSuccess);
     const actionFailureCreator = createUniqueRequiredTimestampAction(actionTypeFailure);
     const actionCancelCreator = createUniqueRequiredTimestampAction(actionTypeCancel);
 
     const result = {
-      [actionKey]: actionCreator,
+      [actionKey]: helper,
       [actionSuccessKey]: actionSuccessCreator,
       [actionFailureKey]: actionFailureCreator,
       [actionCancelKey]: actionCancelCreator
@@ -212,7 +232,7 @@ export function createAsyncActionWithClearObject<
     const actionCreatorClear = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
 
     const result = {
-      ...createAsyncActionObject(name, ns),
+      ...createAsyncActionObject(name, ns)(),
       [actionClearKey]: actionCreatorClear
     };
 
@@ -242,7 +262,7 @@ export function createAsyncTimestampActionWithClearObject<
     const actionCreatorClear = createUniqueAction<ActionClearTypeType, ActionClear>(actionTypeClear);
 
     const result = {
-      ...createAsyncTimestampActionObject(name, ns),
+      ...createAsyncTimestampActionObject(name, ns)(),
       [actionClearKey]: actionCreatorClear
     };
 

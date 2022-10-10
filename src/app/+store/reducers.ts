@@ -55,7 +55,7 @@ export const mainReducer = createReducer<IMainState>(
   on(itemBundle.creators.setItem, (state, { payload: { item } }) => {
     return { ...state, item };
   }),
-  on(itemBundle.creators.itemClear, (state) => {
+  on(itemBundle.creators.clearItem, (state) => {
     return { ...state, item: null };
   })
 );

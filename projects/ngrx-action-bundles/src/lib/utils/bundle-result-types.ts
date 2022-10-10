@@ -141,6 +141,8 @@ export type AsyncCreatorBundleWithTimestampAndClearBundleResult<
   ActionClear
 >
 
+type TimestampDispatchActionHelper<F extends (...args: any[]) => any, T = number> = F extends (...args: infer U) => infer R ? (...args: U) => R & { payload: { timestamp: T } } : never;
+
 /* Dispatch Timestamp Results */
 export type AsyncDispatchBundleWithTimestampActionObject<
   ActionKey extends string,
@@ -152,15 +154,15 @@ export type AsyncDispatchBundleWithTimestampActionObject<
   ActionFailureType extends string,
   ActionCancelType extends string,
   Action extends Partial<ObjectWithTimestamp<any>> | void = void,
-  ActionSuccess extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: number },
-  ActionFailure extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: number },
-  ActionCancel extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: number },
+  ActionSuccess extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: Action extends { timestamp: infer U } ? U : number },
+  ActionFailure extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: Action extends { timestamp: infer U } ? U : number },
+  ActionCancel extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: Action extends { timestamp: infer U } ? U : number },
 > =
-  Record<ActionKey, ReturnType<typeof createUniqueAction<ActionType, Action extends { timestamp: number } ? (Omit<Action, 'timestamp'> & { timestamp?: number }) | void : Action extends { timestamp: infer U } ? Omit<Action, 'timestamp'> & { timestamp: U } : { timestamp?: number } | void>>> &
-  // Record<ActionKey, (payload: Action extends { timestamp: number } ? (Omit<Action, 'timestamp'> & { timestamp?: number }) | void : Action extends { timestamp: infer U } ? Omit<Action, 'timestamp'> & { timestamp: U } : { timestamp?: number } | void) => ReturnType<ReturnType<typeof createUniqueTimestampAction<ActionType, Action>>>> &
+  Record<ActionKey, TimestampDispatchActionHelper<ReturnType<typeof createUniqueAction<ActionType, Action extends { timestamp: number } ? (Omit<Action, 'timestamp'> & { timestamp?: number }) | void : Action extends { timestamp: infer U } ? Omit<Action, 'timestamp'> & { timestamp: U } : { timestamp?: number } | void>>, Action extends { timestamp: infer U } ? U : number>> &
   Record<ActionSuccessKey, ReturnType<typeof createUniqueTimestampAction<ActionSuccessType, ActionSuccess>>> &
   Record<ActionFailureKey, ReturnType<typeof createUniqueTimestampAction<ActionFailureType, ActionFailure>>> &
   Record<ActionCancelKey, ReturnType<typeof createUniqueTimestampAction<ActionCancelType, ActionCancel>>>;
+
 
 export type AsyncDispatchBundleWithTimestampAndClearActionObject<
   ActionKey extends string,
@@ -174,9 +176,9 @@ export type AsyncDispatchBundleWithTimestampAndClearActionObject<
   ActionCancelType extends string,
   ActionClearType extends string,
   Action extends Partial<ObjectWithTimestamp<any>> | void = void,
-  ActionSuccess extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: number },
-  ActionFailure extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: number },
-  ActionCancel extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: number },
+  ActionSuccess extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: Action extends ObjectWithTimestamp<infer U> ? U : number },
+  ActionFailure extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: Action extends ObjectWithTimestamp<infer U> ? U : number },
+  ActionCancel extends (Partial<ObjectWithTimestamp<Action extends ObjectWithTimestamp<infer U> ? U : number>>) | { timestamp: number } = { timestamp: Action extends ObjectWithTimestamp<infer U> ? U : number },
   ActionClear = void
 > = AsyncDispatchBundleWithTimestampActionObject<
   ActionKey,
@@ -191,7 +193,7 @@ export type AsyncDispatchBundleWithTimestampAndClearActionObject<
   ActionSuccess,
   ActionFailure,
   ActionCancel
-> & Record<ActionClearKey, (payload: ActionClear) => ReturnType<ReturnType<typeof createUniqueAction<ActionClearType, ActionClear>>>>;
+> & Record<ActionClearKey, ReturnType<typeof createUniqueAction<ActionClearType, ActionClear>>>;
 
 export type DispatchBundleWithTimestampBundleResult<
   ActionKey extends string,

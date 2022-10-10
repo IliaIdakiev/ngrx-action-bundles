@@ -27,7 +27,7 @@ export type BundleWithTimestampType<
 
 export type BundleWithClearType<Name extends string, Namespace extends string, Action = void, ActionClear = void> =
   ActionBundleItemType<`set${Capitalize<Name>}`, Namespace, '', Action> &
-  ActionBundleItemType<Name, Namespace, 'Clear', ActionClear>;
+  ActionBundleItemType<`clear${Capitalize<Name>}`, Namespace, '', ActionClear>;
 
 export type BundleWithTimestampAndClearType<
   Name extends string,

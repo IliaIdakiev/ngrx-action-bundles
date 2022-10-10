@@ -15,9 +15,10 @@ export const createUniqueRequiredTimestampAction = <
   (payload: P) => ({ payload })
 );
 
+// Only use for type defs
 export const createUniqueTimestampAction = <
   T extends string, P extends Partial<ObjectWithTimestamp<any>> | void = { timestamp?: number }
->(type: T) => <PP extends ObjectWithTimestamp<any> = { timestamp: number }>(payload: P) => {
+>(type: T) => <PP extends ObjectWithTimestamp<any> = P extends { timestamp: infer U } ? { timestamp: U } : { timestamp: number }>(payload: P) => {
   return createAction(
     actionType<T>(type),
     (payload: PP) => {
@@ -28,9 +29,3 @@ export const createUniqueTimestampAction = <
     }
   )(payload as unknown as PP);
 }
-
-type kur = ReturnType<typeof createUniqueTimestampAction<'aaa'>>;
-const a: kur = {} as any;
-
-const b = a({});
-b.payload
