@@ -1,10 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { createEffect } from '@ngrx/effects';
-import { Connect } from 'ngrx-action-bundles';
 import { catchError, filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { IUser } from '../interfaces';
-import { loadUsersWithCustomTimestampBundle, loadUsersWithDefaultTimestampBundle, loadUsersWithNoTimestampBundle } from './bundles';
 import { Model } from './model';
 
 @Injectable()

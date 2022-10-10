@@ -16,6 +16,7 @@
         "dist/ngrx-action-bundles"
       ]
     },
+    "skipLibCheck": false,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,

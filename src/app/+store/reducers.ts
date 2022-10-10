@@ -20,15 +20,23 @@ export const mainReducer = createReducer<IMainState>(
     loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestamp,
     loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestamp,
     loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestamp,
-    (state) => {
+    (state: IMainState) => {
+      return { ...state, userList: null };
+    }),
+  on(
+    loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestamp,
+    loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestampSuccess,
+    loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestamp,
+    (state: IMainState, action) => {
+      console.log(action.payload?.timestamp);
       return { ...state, userList: null };
     }),
   on(
     loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestampSuccess,
     loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestampSuccess,
     loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestampSuccess,
-    (state, { payload: { users } }) => {
-      return { ...state, userList: users };
+    (state, action) => {
+      return { ...state, userList: action.payload.users };
     }),
   on(
     loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestampFailure,
@@ -47,7 +55,7 @@ export const mainReducer = createReducer<IMainState>(
   on(itemBundle.creators.setItem, (state, { payload: { item } }) => {
     return { ...state, item };
   }),
-  on(itemBundle.creators.clearItem, (state) => {
+  on(itemBundle.creators.itemClear, (state) => {
     return { ...state, item: null };
   })
 );
