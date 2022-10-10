@@ -1,6 +1,7 @@
 import { ofType } from '@ngrx/effects';
+import { Observable } from 'rxjs';
 import { ObjectWithTimestamp } from './types';
-import { BundleType, MakeActionKeyWithSuffixType, MakeNamespacedActionKey, } from './utils';
+import { BundleType, createUniqueAction, MakeActionKeyWithSuffixType, MakeNamespacedActionKey, } from './utils';
 import {
   createActionObject, createActionWithClearObject, createActionWithTimestampAndClearObject,
   createAsyncActionObject, createAsyncActionWithClearObject,
@@ -142,7 +143,8 @@ export function createAsyncTimestampBundleWithClear<
     >(name, ns)<Action, ActionSuccess, ActionFailure, ActionCancel, ActionClear>();
 
     const creators = bundle as unknown as AsyncCreatorBundleWithTimestampAndClearBundleResult<Name, Namespace, Action, ActionSuccess, ActionFailure, ActionCancel, ActionClear>;
-    const listen = createActionStreamBundle<typeof bundle>(bundle) as StreamBundleWithTimestampResult<typeof bundle>;
+    type BWC = Omit<typeof bundle, MakeActionKeyWithSuffixType<Name, 'Clear'>>;
+    const listen = createActionStreamBundle<typeof bundle>(bundle) as StreamBundleWithTimestampResult<BWC> & Record<`${MakeActionKeyWithSuffixType<Name, 'Clear'>}$`, Observable<ReturnType<ReturnType<typeof createUniqueAction<MakeActionKeyWithSuffixType<Name, 'Clear'>, ActionClear>>>>>;
     const dispatch = createActionDispatchBundle(bundle) as AsyncDispatchBundleWithTimestampAndClearBundleResult<
       Name,
       Namespace,
