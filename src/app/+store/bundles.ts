@@ -1,5 +1,5 @@
 import { createAsyncBundleWithClear, createAsyncTimestampBundleWithClear, createBundleWithClear } from 'ngrx-action-bundles';
-import { IHttpRequestWithCustomTimestampError, IHttpRequestWithDefaultTimestampError, IHttpRequestWithNoTimestampError, ILoadUsersSuccessWithCustomTimestampPayload, ILoadUsersSuccessWithDefaultTimestampPayload, ILoadUsersSuccessWithNoTimestampPayload } from '../interfaces';
+import { IUser } from '../interfaces';
 
 const actionNamespace = '[MAIN]';
 
@@ -7,11 +7,23 @@ const loadUsersWithCustomTimestampActionName = 'loadUsersWithCustomTimestamp' as
 const loadUsersWithDefaultTimestampActionName = 'loadUsersWithDefaultTimestamp' as const;
 const loadUsersWithNoTimestampActionName = 'loadUsersWithNoTimestamp' as const;
 
-export const loadUsersWithCustomTimestampBundle = createAsyncTimestampBundleWithClear(loadUsersWithCustomTimestampActionName, actionNamespace)<{ timestamp: string }, ILoadUsersSuccessWithCustomTimestampPayload, IHttpRequestWithCustomTimestampError>();
+export const loadUsersWithCustomTimestampBundle = createAsyncTimestampBundleWithClear(loadUsersWithCustomTimestampActionName, actionNamespace)<
+  { timestamp: string },
+  { users: IUser[] },
+  { error: any; }
+>();
 
-export const loadUsersWithDefaultTimestampBundle = createAsyncTimestampBundleWithClear(loadUsersWithDefaultTimestampActionName, actionNamespace)<void, ILoadUsersSuccessWithDefaultTimestampPayload, IHttpRequestWithDefaultTimestampError>();
+export const loadUsersWithDefaultTimestampBundle = createAsyncTimestampBundleWithClear(loadUsersWithDefaultTimestampActionName, actionNamespace)<
+  void,
+  { users: IUser[]; },
+  { error: any; }
+>();
 
-export const loadUsersWithNoTimestampBundle = createAsyncBundleWithClear(loadUsersWithNoTimestampActionName, actionNamespace)<void, ILoadUsersSuccessWithNoTimestampPayload, IHttpRequestWithNoTimestampError>();
+export const loadUsersWithNoTimestampBundle = createAsyncBundleWithClear(loadUsersWithNoTimestampActionName, actionNamespace)<
+  void,
+  { users: IUser[] },
+  { error: any; }
+>();
 
 const itemActionName = 'item' as const;
 

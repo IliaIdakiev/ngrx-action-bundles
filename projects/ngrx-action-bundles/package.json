@@ -1,11 +1,11 @@
 {
   "name": "ngrx-action-bundles",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "peerDependencies": {
-    "@angular/common": "^12.0.0",
-    "@angular/core": "^12.0.0",
-    "@ngrx/effects": "^12.0.0",
-    "@ngrx/store": "^12.0.0"
+    "@angular/common": "^14.0.0",
+    "@angular/core": "^14.0.0",
+    "@ngrx/effects": "^14.3.0",
+    "@ngrx/store": "^14.3.0"
   },
   "dependencies": {},
   "author": {
@@ -21,7 +21,6 @@
     "ngrx util",
     "ngrx tools",
     "ngrx tool",
-    "ngrx helpers",
     "ngrx helper",
     "angular"
   ]

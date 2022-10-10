@@ -1,11 +1,12 @@
 import { ObjectWithTimestamp } from 'ngrx-action-bundles';
 import { IUser } from './user';
 
-export interface ILoadUsersSuccessWithCustomTimestampPayload extends ObjectWithTimestamp<string> {
+export interface ILoadUsersSuccessWithCustomTimestampPayload {
   users: IUser[];
+  timestamp: string;
 }
 
-export interface ILoadUsersSuccessWithDefaultTimestampPayload extends ObjectWithTimestamp {
+export interface ILoadUsersSuccessWithDefaultTimestampPayload {
   users: IUser[];
 }
 
