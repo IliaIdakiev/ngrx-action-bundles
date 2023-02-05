@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ngrx-action-bundles-rewrite": {
+    "ngrx-action-bundles-app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/ngrx-action-bundles-rewrite",
+            "outputPath": "dist/ngrx-action-bundles-app",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -65,10 +65,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "ngrx-action-bundles-rewrite:build:production"
+              "browserTarget": "ngrx-action-bundles-app:build:production"
             },
             "development": {
-              "browserTarget": "ngrx-action-bundles-rewrite:build:development"
+              "browserTarget": "ngrx-action-bundles-app:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -76,7 +76,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ngrx-action-bundles-rewrite:build"
+            "browserTarget": "ngrx-action-bundles-app:build"
           }
         },
         "test": {
