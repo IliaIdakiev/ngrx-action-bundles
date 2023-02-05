@@ -155,7 +155,7 @@
       // if we receive loadUsersCancel action will will cancel the request
       // if the request succeeds we will send loadUsersSuccess action
       // if the request fails we will send loadUsersFailure action
-      loadUsersWithCustomTimestamp = createEffect(() =>
+      loadUsers = createEffect(() =>
         this.model.actions.listen.loadUsers$.pipe(switchMap(
           () => this.http.get<IUser[]>(
             'https://jsonplaceholder.typicode.com/users'

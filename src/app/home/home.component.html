@@ -3,10 +3,12 @@
   <div *ngIf="isLoading">Loading...</div>
   <div *ngFor="let user of (users$ | async)">{{user.username}}</div>
   <button (click)="reloadUsers()">Reload Users</button>
+  <button (click)="reloadUsersWithTimestamp()">Reload Users With Timestamp</button>
 </div>
 <div>
   <h1>Message Item is: {{item$ | async}}</h1>
   <input #inp type="text" value="">
   <button (click)="setItem({ item: inp.value }); inp.value = ''">Set item in store</button>
+  <button (click)="sendStandardAction({ item: inp.value });">Send standard action</button>
   <button (click)="clearItem()">Clear item in store</button>
 </div>

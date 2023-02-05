@@ -14,7 +14,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   loadTimestamp: number | undefined;
 
-  isLoading = false;
+  isLoadingWithoutTimestamp = false;
+  isLoadingWithTimestamp = false;
+
+  get isLoading() {
+    return this.isLoadingWithTimestamp || this.isLoadingWithoutTimestamp;
+  }
 
   users$ = this.model.selectors.userList$;
   item$ = this.model.selectors.item$;
@@ -27,7 +32,21 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.model.actions.listen.loadUsersSuccess$.pipe(map(() => false)),
           this.model.actions.listen.loadUsersFailure$.pipe(map(() => false)),
         )
-      ]).subscribe(isLoadingArray => this.isLoading = isLoadingArray.includes(true))
+      ]).subscribe(isLoadingArray => this.isLoadingWithoutTimestamp = isLoadingArray.includes(true))
+    );
+
+    this.subscriptions.add(
+      combineLatest([
+        merge(
+          this.model.actions.listen.loadUsersWithTimestamp$.pipe(map(() => true)),
+          this.model.actions.listen.loadUsersWithTimestampSuccess$.pipe(map(() => false)),
+          this.model.actions.listen.loadUsersWithTimestampFailure$.pipe(map(() => false)),
+        )
+      ]).subscribe(isLoadingArray => this.isLoadingWithTimestamp = isLoadingArray.includes(true))
+    );
+
+    this.subscriptions.add(
+      this.model.actions.listen.test$.subscribe((value) => console.log('Test action value is:', value))
     );
   }
 
@@ -40,13 +59,24 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.model.actions.dispatch.setItem(data);
   }
 
+  sendStandardAction(data: { item: string }): void {
+    this.model.actions.dispatch.test({ value: data.item });
+  }
+
   clearItem() {
     this.model.actions.dispatch.setItemCleanup();
   }
 
   reloadUsers(): void {
+    this.cancelActions();
     const action = this.model.actions.dispatch.loadUsers();
     console.log('loadUsers action is:', action);
+  }
+
+  reloadUsersWithTimestamp(): void {
+    this.cancelActions();
+    const action = this.model.actions.dispatch.loadUsersWithTimestamp();
+    console.log('loadUsersWithTimestamp action is:', action);
   }
 
   cancelActions(): void {
@@ -54,8 +84,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     console.log('loadUsers Cancel action is:', action);
   }
 
+  cancelLoading() {
+    if (this.isLoadingWithoutTimestamp) {
+      this.model.actions.dispatch.loadUsersCancel();
+    }
+    if (this.isLoadingWithTimestamp) {
+      this.model.actions.dispatch.loadUsersWithTimestampCancel();
+    }
+  }
+
   ngOnDestroy(): void {
-    if (this.isLoading) { this.model.actions.dispatch.loadUsersCancel(); }
+    this.cancelLoading();
     this.subscriptions.unsubscribe();
   }
 }

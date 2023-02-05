@@ -24,11 +24,14 @@ function singleWithTimestamp<
   ActionName extends string,
   P extends object = EMPTY
 >(namespace: Namespace, actionName: ActionName, _props?: ActionCreatorProps<P>) {
-  const name = `[${namespace}] ${actionName}`;
-  const actionFactory = (...args: any) => {
-    return Object.assign((createAction(name) as any)(...args), { timestamp: createTimestamp() })
-  };
-  return actionFactory as unknown as P extends EMPTY ?
+  const name = actionType(`[${namespace}] ${actionName}`);
+  const actionFactory = createAction(name, _props as any);
+  const actionFactoryWrapper = (...args: any[]) => {
+    return Object.assign((actionFactory as any)(...args), { timestamp: createTimestamp() });
+  }
+  (actionFactoryWrapper as any).type = actionFactory.type;
+
+  return actionFactoryWrapper as unknown as P extends EMPTY ?
     ReturnType<typeof createActionWithTimestamp<`[${Namespace}] ${ActionName}`>> :
     ReturnType<typeof createActionWithTimestamp<`[${Namespace}] ${ActionName}`, P>>;
 }
