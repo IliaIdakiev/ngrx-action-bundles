@@ -8,7 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { EffectsModule } from '@ngrx/effects';
-import { UserListEffects } from './+store/effects';
+import { Effects } from './+store/effects';
 import { AboutComponent } from './about/about.component';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
@@ -22,9 +22,9 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    EffectsModule.forRoot([UserListEffects]),
+    EffectsModule.forRoot([Effects]),
     StoreModule.forRoot(reducers),
-    StoreDevtoolsModule.instrument()
+    StoreDevtoolsModule.instrument(),
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,13 +1,15 @@
 {
   "name": "ngrx-action-bundles",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "peerDependencies": {
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0",
-    "@ngrx/effects": "^14.3.0",
-    "@ngrx/store": "^14.3.0"
+    "@angular/common": "^15.0.0",
+    "@angular/core": "^15.0.0",
+    "@ngrx/effects": "^15.2.1",
+    "@ngrx/store": "^15.2.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
   "author": {
     "name": "Iliya Idakiev",
     "url": "https://developers.google.com/community/experts/directory/profile/profile-iliya_idakiev"
@@ -15,13 +17,20 @@
   "homepage": "https://github.com/IliaIdakiev/ngrx-action-bundles",
   "license": "MIT",
   "keywords": [
+    "ngrx store",
+    "ngrx effects",
+    "ngrx store helpers",
+    "ngrx effects helpers",
+    "ngrx action bundle",
     "ngrx action bundles",
+    "angular action bundle",
     "angular action bundles",
     "ngrx utils",
     "ngrx util",
     "ngrx tools",
     "ngrx tool",
     "ngrx helper",
+    "ngrx helpers",
     "angular"
   ]
 }
