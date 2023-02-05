@@ -1,5 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
-import { loadUsersWithCustomTimestampBundle, loadUsersWithDefaultTimestampBundle, loadUsersWithNoTimestampBundle, itemBundle } from './bundles';
+import { loadUsers, setItem } from './bundles';
 import { IUser } from '../interfaces';
 
 export interface IMainState {
@@ -17,45 +17,29 @@ export const initialState: IMainState = {
 export const mainReducer = createReducer<IMainState>(
   initialState,
   on(
-    loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestamp,
-    loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestamp,
-    loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestamp,
-    (state: IMainState) => {
-      return { ...state, userList: null };
-    }),
+    loadUsers.loadUsers,
+    (state: IMainState) => ({ ...state, userList: null })
+  ),
   on(
-    loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestamp,
-    loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestampSuccess,
-    loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestamp,
-    (state: IMainState, action) => {
-      console.log(action.payload?.timestamp);
-      return { ...state, userList: null };
-    }),
+    loadUsers.loadUsersSuccess,
+    (state, { users }) => {
+      return { ...state, userList: users }
+    }
+  ),
   on(
-    loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestampSuccess,
-    loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestampSuccess,
-    loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestampSuccess,
-    (state, action) => {
-      return { ...state, userList: action.payload.users };
-    }),
+    loadUsers.loadUsersFailure,
+    (state, { error }) => {
+      return { ...state, error };
+    }
+  ),
   on(
-    loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestampFailure,
-    loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestampFailure,
-    loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestampFailure,
-    (status, { payload: { error: { message } } }) => {
-      return { ...status, error: message };
-    }),
+    setItem.setItem,
+    (state, { item }) => {
+      return { ...state, item };
+    }
+  ),
   on(
-    loadUsersWithCustomTimestampBundle.creators.loadUsersWithCustomTimestampClear,
-    loadUsersWithDefaultTimestampBundle.creators.loadUsersWithDefaultTimestampClear,
-    loadUsersWithNoTimestampBundle.creators.loadUsersWithNoTimestampClear,
-    (status) => {
-      return { ...status, userList: null };
-    }),
-  on(itemBundle.creators.setItem, (state, { payload: { item } }) => {
-    return { ...state, item };
-  }),
-  on(itemBundle.creators.clearItem, (state) => {
-    return { ...state, item: null };
-  })
+    setItem.setItemCleanup,
+    (state) => ({ ...state, item: null })
+  )
 );

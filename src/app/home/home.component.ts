@@ -19,43 +19,21 @@ export class HomeComponent implements OnInit, OnDestroy {
   users$ = this.model.selectors.userList$;
   item$ = this.model.selectors.item$;
 
-  dispatchedActions: { type: 1 | 2 | 3 | 4; action: any }[] = [];
-
   constructor(private model: Model) {
     this.subscriptions.add(
       combineLatest([
         merge(
-          this.model.actions.listen.loadUsersWithNoTimestamp$.pipe(map(() => true)),
-          this.model.actions.listen.loadUsersWithNoTimestampSuccess$.pipe(map(() => false)),
-          this.model.actions.listen.loadUsersWithNoTimestampFailure$.pipe(map(() => false)),
-        ),
-        merge(
-          this.model.actions.listen.loadUsersWithDefaultTimestamp$.pipe(map(() => true)),
-          this.model.actions.listen.loadUsersWithDefaultTimestampSuccess$.pipe(map(() => false)),
-          this.model.actions.listen.loadUsersWithDefaultTimestampFailure$.pipe(map(() => false)),
-        ),
-        merge(
-          this.model.actions.listen.loadUsersWithCustomTimestamp$.pipe(map(() => true)),
-          this.model.actions.listen.loadUsersWithCustomTimestampSuccess$.pipe(map(() => false)),
-          this.model.actions.listen.loadUsersWithCustomTimestampFailure$.pipe(map(() => false)),
-        ),
+          this.model.actions.listen.loadUsers$.pipe(map(() => true)),
+          this.model.actions.listen.loadUsersSuccess$.pipe(map(() => false)),
+          this.model.actions.listen.loadUsersFailure$.pipe(map(() => false)),
+        )
       ]).subscribe(isLoadingArray => this.isLoading = isLoadingArray.includes(true))
     );
   }
 
   ngOnInit(): void {
-    const dispatchedAction = this.model.actions.dispatch.loadUsersWithNoTimestamp();
+    const dispatchedAction = this.model.actions.dispatch.loadUsers();
     console.log('ngOnInit action is:', dispatchedAction);
-
-    this.subscriptions.add(
-      this.model.actions.listen.loadUsersWithNoTimestampSuccess$.subscribe(console.log)
-    );
-    this.subscriptions.add(
-      this.model.actions.listen.loadUsersWithNoTimestampCancel$.subscribe(console.log)
-    );
-    this.subscriptions.add(
-      this.model.actions.listen.loadUsersWithNoTimestampClear$.subscribe(console.log)
-    );
   }
 
   setItem(data: { item: string }) {
@@ -63,61 +41,21 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   clearItem() {
-    this.model.actions.dispatch.clearItem();
+    this.model.actions.dispatch.setItemCleanup();
   }
 
-  reloadUsers(type: 1 | 2 | 3 | 4): void {
-    if (type === 1) {
-      const action = this.model.actions.dispatch.loadUsersWithNoTimestamp();
-      this.dispatchedActions.push({ type, action })
-      console.log('loadUsersWithNoTimestamp action is:', action);
-      return;
-    }
-    if (type === 2) {
-      const action = this.model.actions.dispatch.loadUsersWithDefaultTimestamp();
-      this.dispatchedActions.push({ type, action })
-      console.log('loadUsersWithNoTimestamp action is:', action);
-      return;
-    }
-    if (type === 3) {
-      const action = this.model.actions.dispatch.loadUsersWithDefaultTimestamp({ timestamp: 213 });
-      this.dispatchedActions.push({ type, action })
-      console.log('loadUsersWithDefaultTimestamp action is:', action);
-      return;
-    }
-    if (type === 4) {
-      const action = this.model.actions.dispatch.loadUsersWithCustomTimestamp({ timestamp: Math.random().toString() });
-      const aaa = this.model.actions.dispatch.loadUsersWithCustomTimestampSuccess({ users: [], timestamp: '123' });
-      this.dispatchedActions.push({ type, action })
-      console.log('loadUsersWithCustomTimestamp action is:', action);
-      return;
-    }
+  reloadUsers(): void {
+    const action = this.model.actions.dispatch.loadUsers();
+    console.log('loadUsers action is:', action);
   }
 
   cancelActions(): void {
-    this.dispatchedActions.forEach(({ type, action }) => {
-      if (type === 1) {
-        this.model.actions.dispatch.loadUsersWithNoTimestampCancel();
-        return;
-      }
-      if (type === 2) {
-        this.model.actions.dispatch.loadUsersWithDefaultTimestampCancel({ timestamp: action.payload.timestamp });
-        return;
-      }
-      if (type === 3) {
-        this.model.actions.dispatch.loadUsersWithDefaultTimestampCancel({ timestamp: 213 });
-        return;
-      }
-      if (type === 4) {
-        this.model.actions.dispatch.loadUsersWithCustomTimestampCancel({ timestamp: action.payload.timestap });
-        return;
-      }
-    });
+    const action = this.model.actions.dispatch.loadUsersCancel();
+    console.log('loadUsers Cancel action is:', action);
   }
 
   ngOnDestroy(): void {
-    if (this.isLoading) { this.model.actions.dispatch.loadUsersWithNoTimestampCancel(); }
-    this.model.actions.dispatch.loadUsersWithNoTimestampCancel();
+    if (this.isLoading) { this.model.actions.dispatch.loadUsersCancel(); }
     this.subscriptions.unsubscribe();
   }
 }

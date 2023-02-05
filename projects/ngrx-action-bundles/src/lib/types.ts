@@ -1,53 +1,98 @@
-import { FunctionWithParametersType, TypedAction } from '@ngrx/store/src/models';
-import { Observable } from 'rxjs';
+import { ActionCreator, ActionCreatorProps, NotAllowedCheck } from "@ngrx/store";
+import { TypedAction } from "@ngrx/store/src/models";
+import { Observable } from "rxjs";
+import { forNamespace } from "./bundle-factory";
+
+export type ALLOWED_DEPTHS = ElementOf<Range<90>>;
+
+export type ElementOf<T> = T extends (infer E)[] ? E : T;
 
 export type UnionToIntersection<U> =
   (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
 
-export type ElementOf<T> = T extends (infer E)[] ? E : T;
+export type ValueOf<T> = T[keyof T];
 
-// export type MapKeyToCreator<T, Key extends string> = {
-//   [P in keyof T & string as `${Key}`]: T[P]
-// };
+export type BundleFactoryResult<T extends string> = ReturnType<typeof forNamespace<T>>;
+export type BundleFactoryResultValues<T extends string = ''> = ReturnType<ValueOf<BundleFactoryResult<T>>>;
 
-export type UniqueActionCreator<T extends string, P> = (payload: P) => { payload: P } & FunctionWithParametersType<[payload: P], {
-  payload: P;
-}> & TypedAction<T>;
-
-export type WithDispatchAndListenResult<T> = {
-  listen: { [K in keyof T & string as `${K}$`]:
-    Observable<T[K] extends (...args: any) => any ? ReturnType<T[K]> :
-      T[K] extends () => any ? ReturnType<T[K]> : never>;
-  };
-  dispatch: {
-    [K in keyof T]: T[K] extends (payload: infer P) => { payload: any } & TypedAction<any> ?
-    (payload: P) => void : T[K] extends (...args: infer F) => TypedAction<any> ? (...args: F) => void :
-    T[K] extends () => TypedAction<any> ? () => TypedAction<any> : never;
-  };
+export type ListenStreams<T> = { [K in keyof T & string as `${K}$`]:
+  Observable<
+    T[K] extends (...args: any) => any ? ReturnType<T[K]> :
+    T[K] extends () => any ? ReturnType<T[K]> : never
+  >;
 };
 
-export type Unpack<T> = T extends Array<infer I>
-  ? I
-  : T extends (...args: any) => infer R
-  ? R
-  : T extends Promise<infer P>
-  ? P
-  : T;
-
-export type ConnectedSelectorResult<T> = {
+export type SelectorStreams<T> = {
   [K in keyof T & string as `${K}\$`]: T[K] extends (...args: any[]) => infer U ? Observable<U> : never
 }
 
-export type ConnectedBundlesResult<T> = UnionToIntersection<ElementOf<T>>;
+type LengthOf<T extends any[]> = T["length"];
 
-export type ObjectWithTimestamp<T = number> = {
-  [key: string | number]: any;
-} & Timestamp<T>;
+type Unshift<List extends any[], Item> =
+  ((first: Item, ...rest: List) => any) extends ((...list: infer R) => any) ? R : never;
 
-export type PayloadWithTimestamp<T> = {
-  payload: ObjectWithTimestamp<T>
-};
+type Equals<T, S> =
+  [T] extends [S] ? (
+    [S] extends [T] ? true : false
+  ) : false;
 
-export type Timestamp<T = number> = {
-  timestamp: T;
-}
+export type Range<N, T extends number[] = []> = {
+  0: T,
+  1: Range<N, Unshift<T, LengthOf<T>>>,
+}[Equals<LengthOf<Tail<T>>, N> extends true ? 0 : 1];
+
+
+type Head<T extends any[]> = T extends [head: infer HEAD, ...tail: any] ? HEAD : never;
+type Tail<T extends any[]> = T extends [head: any, ...tail: infer TAIL] ? TAIL : never;
+
+export type Filter<T extends any[], F extends any> =
+  LengthOf<T> extends 0 ? [] :
+  Head<T> extends F ? [...Filter<Tail<T>, F>] :
+  [Head<T>, ...Filter<Tail<T>, F>];
+
+type Join<T extends string[]> =
+  LengthOf<T> extends 0 ? '' :
+  Head<T> extends string ? Tail<T> extends Array<string> ? `${Head<T>}${Join<Tail<T>>}` :
+  never : never;
+
+export type Split<S extends string, D extends string> =
+  string extends S ? string[] :
+  S extends '' ? [] :
+  S extends `${infer T}${D}${infer U}` ? [T, ...Split<U, D>] : [S];
+
+type CapitalizeFirstLetter<T extends string> = `${Capitalize<Head<Split<T, ''>>>}${Join<Tail<Split<T, ''>>>}`;
+type LowercaseFirstLetter<T extends string> = `${Lowercase<Head<Split<T, ''>>>}${Join<Tail<Split<T, ''>>>}`;
+type CapitalizeArrayItemsFirstLetter<T extends string[]> =
+  LengthOf<T> extends 0 ? [] :
+  Head<T> extends string ? Tail<T> extends Array<string> ?
+  [CapitalizeFirstLetter<Head<T>>, ...CapitalizeArrayItemsFirstLetter<Tail<T>>]
+  : never : never;
+
+export type FunctionNameFromStringArray<T extends string[]> =
+  Head<T> extends string ? Tail<T> extends Array<string> ? CapitalizeArrayItemsFirstLetter<Tail<T>> extends string[] ?
+  Join<[LowercaseFirstLetter<Head<T>>, ...CapitalizeArrayItemsFirstLetter<Tail<T>>]> : never : never : never;
+
+export type FunctionNameFromString<T extends string> =
+  Filter<Split<T, ' '>, ''> extends string[] ?
+  FunctionNameFromStringArray<Filter<Split<T, ' '>, ''>> :
+  never;
+
+// Custom Action Creators for actions with auto timestamp
+export declare function createActionWithTimestamp<
+  T extends string
+>(type: T): ActionCreator<
+  T,
+  () => { timestamp: number } & TypedAction<T>
+>;
+
+export declare function createActionWithTimestamp<
+  T extends string,
+  P extends object
+>(
+  type: T,
+  config: ActionCreatorProps<P> & NotAllowedCheck<P>
+): ActionCreator<
+  T,
+  (props: P & NotAllowedCheck<P>) => P & { timestamp: number } & TypedAction<T>
+>;
+

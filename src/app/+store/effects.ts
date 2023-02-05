@@ -6,32 +6,21 @@ import { IUser } from '../interfaces';
 import { Model } from './model';
 
 @Injectable()
-export class UserListEffects {
+export class Effects {
 
-  loadUsersWithCustomTimestamp = createEffect(() => this.model.actions.listen.loadUsersWithCustomTimestamp$.pipe(switchMap(
-    ({ payload: { timestamp } }) => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(
-      takeUntil(this.model.actions.listen.loadUsersWithCustomTimestamp$.pipe(filter(({ payload }) => payload.timestamp === timestamp))),
-      map(users => this.model.actions.creators.loadUsersWithCustomTimestampSuccess({ users, timestamp })),
-      catchError(error => [this.model.actions.creators.loadUsersWithCustomTimestampFailure({ error, timestamp })])
-    )
-  )));
-
-  loadUsersWithDefaultTimestamp = createEffect(() => this.model.actions.listen.loadUsersWithDefaultTimestamp$.pipe(switchMap(
-    ({ payload: { timestamp } }) => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(
-      takeUntil(this.model.actions.listen.loadUsersWithDefaultTimestamp$.pipe(filter(({ payload }) => payload.timestamp === timestamp))),
-      map(users => this.model.actions.creators.loadUsersWithDefaultTimestampSuccess({ users, timestamp })),
-      catchError(error => [this.model.actions.creators.loadUsersWithDefaultTimestampFailure({ error, timestamp })])
-    )
-  )));
-
-  loadUsersWithNoTimestamp = createEffect(() => this.model.actions.listen.loadUsersWithNoTimestamp$.pipe(switchMap(
-    () => this.http.get<IUser[]>('https://jsonplaceholder.typicode.com/users').pipe(
-      takeUntil(this.model.actions.listen.loadUsersWithNoTimestamp$),
-      map(users => this.model.actions.creators.loadUsersWithNoTimestampSuccess({ users })),
-      catchError(error => [this.model.actions.creators.loadUsersWithNoTimestampFailure({ error })])
-    )
-  )));
-
+  loadUsersWithCustomTimestamp = createEffect(() =>
+    this.model.actions.listen.loadUsers$.pipe(switchMap(
+      () => this.http.get<IUser[]>(
+        'https://jsonplaceholder.typicode.com/users'
+      ).pipe(
+        takeUntil(this.model.actions.listen.loadUsersCancel$),
+        map(users => this.model.actions.create.loadUsersSuccess({ users })),
+        catchError(error =>
+          [this.model.actions.create.loadUsersFailure({ error })]
+        )
+      )
+    )));
+  ;
   constructor(
     private http: HttpClient,
     private model: Model

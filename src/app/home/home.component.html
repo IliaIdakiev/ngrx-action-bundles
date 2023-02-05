@@ -2,9 +2,7 @@
   <h1>User List</h1>
   <div *ngIf="isLoading">Loading...</div>
   <div *ngFor="let user of (users$ | async)">{{user.username}}</div>
-  <button (click)="reloadUsers(1)">Reload Users With No Timestamp</button>
-  <button (click)="reloadUsers(2)">Reload Users With Default Timestamp</button>
-  <button (click)="reloadUsers(3)">Reload Users With Custom Timestamp</button>
+  <button (click)="reloadUsers()">Reload Users</button>
 </div>
 <div>
   <h1>Message Item is: {{item$ | async}}</h1>
