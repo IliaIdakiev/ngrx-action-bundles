@@ -14,10 +14,10 @@
     ```typescript
     // app.module.ts
     import { NgModule } from '@angular/core';
-    import { reducers } from './+store/reducers';
     import { StoreModule } from '@ngrx/store';
     import { EffectsModule } from '@ngrx/effects';
     import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+    import { reducers } from './+store/reducers';
 
     @NgModule({
       imports: [
@@ -35,6 +35,9 @@
 
     ```typescript
     // bundles.ts
+    import { forNamespace } from "ngrx-action-bundles";
+    import { IUser } from "../interfaces";
+
     const factory = forNamespace('MAIN'); // create namespaced action factory. All action types will be
     // with the format `[MAIN] ${actionName}`.
 
@@ -44,7 +47,7 @@
     // 3. if the request fails we need to do something with the error.
     // 4. if the request is not needed any more we want to cancel it
     // In this case we will use the factory.asyncAction creator to create all those actions for us.
-    export const loadUsers = factory.asyncAction(
+    export const loadUsersBundle = factory.asyncAction(
       'loadUsers', // action name
       undefined, // request action payload interface (the action type will be `[MAIN] loadUsers`)
       props<{ users: IUser[] }>(), // success action payload interface (the action type will be `[MAIN] loadUsersSuccess`)
@@ -62,7 +65,7 @@
 
     // Next we are going to be setting something inside the store but at the same time we will need a clean-up action so
     // we will use the singleActionWithCleanup. This will generate the "setItem" and "SetItemCleanup" actions;
-    export const setItem = factory.singleActionWithCleanup(
+    export const setItemBundle = factory.singleActionWithCleanup(
       'setItem',
       props<{ item: string }>()
     );
@@ -76,20 +79,20 @@
     // At the end we will create this ReadonlyArray that will store all of our action bundles that we will be using inside our app
     // Later on we will use this array to connect those bundles to our components/services/pipes/directives. In this example
     // we will just connect it to the main component.
-    export const bundles = [loadUsers, setItem] as const;
+    export const bundles = [loadUsersBundle, setItemBundle] as const;
     ```
 
 3. **Setup the reducer**
     ```typescript
     // reducers.ts
     import { createReducer, on } from '@ngrx/store';
-    import { loadUsers, setItem } from './bundles';
+    import { loadUsersBundle, setItemBundle } from './bundles';
     import { IUser } from '../interfaces';
 
     export interface IMainState {
       userList: IUser[] | null;
       error: string | null;
-      item: any;
+      item: string | null;
     }
 
     export const initialState: IMainState = {
@@ -101,29 +104,29 @@
     export const mainReducer = createReducer<IMainState>(
       initialState,
       on(
-        loadUsers.loadUsers,
+        loadUsersBundle.loadUsers,
         (state: IMainState) => ({ ...state, userList: null })
       ),
       on(
-        loadUsers.loadUsersSuccess,
+        loadUsersBundle.loadUsersSuccess,
         (state, { users }) => {
           return { ...state, userList: users }
         }
       ),
       on(
-        loadUsers.loadUsersFailure,
+        loadUsersBundle.loadUsersFailure,
         (state, { error }) => {
           return { ...state, error };
         }
       ),
       on(
-        setItem.setItem,
+        setItemBundle.setItem,
         (state, { item }) => {
           return { ...state, item };
         }
       ),
       on(
-        setItem.setItemCleanup,
+        setItemBundle.setItemCleanup,
         (state) => ({ ...state, item: null })
       )
     );    
@@ -132,12 +135,13 @@
 
     ```typescript
     // effects.ts
-    import { HttpClient } from '@angular/common/http';
     import { Injectable } from '@angular/core';
+    import { HttpClient } from '@angular/common/http';
     import { createEffect } from '@ngrx/effects';
     import { catchError, filter, map, switchMap, takeUntil } from 'rxjs/operators';
-    import { IUser } from '../interfaces';
     import { Connect } from 'ngrx-action-bundles';
+    import { bundles } from './bundles';
+    import { IUser } from '../interfaces';
 
     @Injectable()
     export class Effects {
@@ -156,14 +160,14 @@
       // if the request succeeds we will send loadUsersSuccess action
       // if the request fails we will send loadUsersFailure action
       loadUsers = createEffect(() =>
-        this.model.actions.listen.loadUsers$.pipe(switchMap(
+        this.actions.listen.loadUsers$.pipe(switchMap(
           () => this.http.get<IUser[]>(
             'https://jsonplaceholder.typicode.com/users'
           ).pipe(
-            takeUntil(this.model.actions.listen.loadUsersCancel$),
-            map(users => this.model.actions.create.loadUsersSuccess({ users })),
+            takeUntil(this.actions.listen.loadUsersCancel$),
+            map(users => this.actions.create.loadUsersSuccess({ users })),
             catchError(error =>
-              [this.model.actions.create.loadUsersFailure({ error })]
+              [this.actions.create.loadUsersFailure({ error })]
             )
           )
         )));
@@ -194,6 +198,7 @@
       selectMain,
       (state: IMainState) => state.item
     );
+    export const selectors = { userList, item };
     ```
 
 6. **Let's start using everything**
@@ -202,9 +207,9 @@
     //some.component.ts
     import { Component, OnDestroy, OnInit } from '@angular/core';
     import { Connect } from 'ngrx-action-bundles';
-    import { loadUsersBundle, itemBundle } from '../+store/actions';
-    import { selectMainUserList, selectMainItem } from '../+store/selectors';
     import { merge, Subscription, map } from 'rxjs';
+    import { bundles } from '../+store/bundles';
+    import { selectors } from '../+store/selectors';
 
     @Component({
       ...
@@ -247,14 +252,14 @@
       // Let's create a method that we will use to dispatch the load users action
       // here we will just use the dispatch property of the actions to dispatch the
       // load users action that we've created earlier
-      loadUsers() { this.actions.dispatch.loadUsers(); }
+      loadUsers(): void { this.actions.dispatch.loadUsers(); }
       
-      setItem(input: HTMLInputElement) {
+      setItem(input: HTMLInputElement): void {
         actions.dispatch.setItem({ item: input.value }); 
         input.value = '';
       }
       
-      clearItem() { this.actions.dispatch.clearItem(); }
+      clearItem(): void { this.actions.dispatch.clearItem(); }
 
 
       ngOnDestroy(): void {
@@ -272,7 +277,7 @@
     <div>
       <h1>User List</h1>
       <div *ngIf="isLoading">Loading...</div>
-      <div *ngFor="let user of (selectors.users$ | async)">{{user.username}}</div>
+      <div *ngFor="let user of (selectors.userList$ | async)">{{user.username}}</div>
       <button (click)="loadUsers()">Reload Users</button>
     </div>
     <div>
