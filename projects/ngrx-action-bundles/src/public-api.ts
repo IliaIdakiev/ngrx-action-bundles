@@ -4,3 +4,4 @@
 
 export * from './lib/bundle-factory';
 export * from './lib/connect.service';
+export * from './lib/connect-handlers';

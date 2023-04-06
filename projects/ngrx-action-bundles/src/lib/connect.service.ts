@@ -10,7 +10,7 @@ export class Connect {
 
   constructor(private store: Store, private actions: Actions) { }
 
-  bundles<U extends string, T extends ReadonlyArray<BundleFactoryResultValues<U>>>(bundles: T) {
+  bundles<T extends ReadonlyArray<BundleFactoryResultValues<U>>, U extends string>(bundles: T) {
 
     const result = { create: {} as any, dispatch: {} as any, listen: {} as any };
     for (const creators of bundles) {

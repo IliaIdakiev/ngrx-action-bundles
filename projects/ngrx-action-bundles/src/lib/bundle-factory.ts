@@ -5,7 +5,6 @@ import { createActionWithTimestamp, ElementOf, Range } from './types';
 
 const EMPTY_SYMBOL = Symbol('EMPTY_SYMBOL');
 type EMPTY = { _empty: typeof EMPTY_SYMBOL };
-type ALLOWED_DEPTHS = ElementOf<Range<90>>;
 
 function single<
   Namespace extends string,
