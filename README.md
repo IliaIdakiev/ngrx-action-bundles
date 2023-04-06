@@ -2,10 +2,22 @@
 
 **This library allows you to reduce ngrx boilerplate by generating action bundles for common ngrx redux store scenarios and allows you to easily connect state, dispatch actions and listen for actions everywhere across your applications**
 
-## Installation:
 
-1. Install ngrx dependencies - `npm install @ngrx/store @ngrx/effects` or `yarn add @ngrx/store @ngrx/effects`.
-2. Install the library - `npm install ngrx-action-bundles` || `yarn add ngrx-action-bundles`
+# DEMO APP
+This repository contains a demo project so you can use the commands bellow to clone the project, build the library and serve the demo project.
+Instructions to run the demo: 
+1. `git clone https://github.com/IliaIdakiev/ngrx-action-bundles.git` (clone the repo)
+2. `cd ngrx-action-bundles` (enter the directory that was created)
+3. `ng build ngrx-action-bundles` (build the ngrx-action-bundles library)
+4. `ng s` (serve the project)
+
+If you don't want to do this locally you can view the code and run the code [here](https://stackblitz.com/github/IliaIdakiev/ngrx-action-bundles?file=README.md).
+
+# Steps for setting up the ngrx-action-bundles inside your project:
+
+1. Install ngrx store and effects (this are dependencies used by ngrx-action-bundles) - `npm install @ngrx/store @ngrx/effects` or `yarn add @ngrx/store @ngrx/effects`.
+
+2. Install the library - `npm install ngrx-action-bundles` or `yarn add ngrx-action-bundles`
 
 ### Usage:
 
@@ -31,7 +43,7 @@
     export class AppModule { }
 
     ```
-2. **Create some actions.**
+2. **Create some action bundles.**
 
     ```typescript
     // bundles.ts
@@ -139,7 +151,7 @@
     import { HttpClient } from '@angular/common/http';
     import { createEffect } from '@ngrx/effects';
     import { catchError, filter, map, switchMap, takeUntil } from 'rxjs/operators';
-    import { Connect } from 'ngrx-action-bundles';
+    import { connectBundles } from 'ngrx-action-bundles';
     import { bundles } from './bundles';
     import { IUser } from '../interfaces';
 
@@ -147,8 +159,8 @@
     export class Effects {
       
       // Let's connect the bundles array that we've created earlier with the 
-      // connect service from the ngrx-action-bundles
-      actions = this.connect.bundles(bundles);
+      // connectBundles function from the ngrx-action-bundles
+      actions = connectBundles(bundles);
       // actions will look like { 
       //   create: { [availableActions]: actionCreatros } 
       //   dispatch: { [availableActions]: actionDispatchers (the dispatcher will dispatch the action and return the action that we've dispatched as well) } 
@@ -174,7 +186,7 @@
       ;
       constructor(
         private http: HttpClient,
-        private connect: Connect
+        
       ) { }
     }
 
@@ -206,7 +218,7 @@
     ```typescript
     //some.component.ts
     import { Component, OnDestroy, OnInit } from '@angular/core';
-    import { Connect } from 'ngrx-action-bundles';
+    import { connectBundles, connectSelectors } from 'ngrx-action-bundles';
     import { merge, Subscription, map } from 'rxjs';
     import { bundles } from '../+store/bundles';
     import { selectors } from '../+store/selectors';
@@ -219,7 +231,7 @@
       isLoading = false;
 
       // Let's connect the bundles array that we've created earlier
-      actions = this.connect.bundles(bundles);
+      actions = connectBundles(bundles);
       // actions will look like { 
       //   create: { [availableActions]: actionCreatros } 
       //   dispatch: { [availableActions]: actionDispatchers (the dispatcher will dispatch the action and return the action that we've dispatched as well) } 
@@ -227,14 +239,12 @@
       // }
       
       // Let's also connect all the selectors that we've created.
-      selectors = this.connect.selectors(selectors);
+      selectors = connectSelectors(selectors);
       // selectors will look like { 
       //   [availableActions$]: selectorStreams (rxjs selector streams)
       // }
       
-      // In order to connect all of those we will use the ngrx action bundles connect service
-      constructor(private connect: Connect) { 
-        
+      constructor() {   
         // Let's react over the loading of the users. 
         // Every time a loadUsers action is dispatched we will set isLoading to true
         // and when we get a success or failure action we will set isLoading to false
