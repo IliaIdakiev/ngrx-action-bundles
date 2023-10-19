@@ -2,10 +2,10 @@
   "name": "ngrx-action-bundles",
   "version": "5.0.2",
   "peerDependencies": {
-    "@angular/common": "^15.0.0",
-    "@angular/core": "^15.0.0",
-    "@ngrx/effects": "^15.2.1",
-    "@ngrx/store": "^15.2.1"
+    "@angular/common": "^16.2.10",
+    "@angular/core": "^16.2.10",
+    "@ngrx/effects": "^16.3.0",
+    "@ngrx/store": "^16.3.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
